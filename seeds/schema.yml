@@ -1,0 +1,36 @@
+version: 2
+
+seeds:
+  - name: country_codes
+    config:
+      schema: nexus
+    description: "Mapping of country names to ISO 3166-1 alpha-2 codes (lowercase). Used for normalizing Bing/Microsoft Ads country names."
+    columns:
+      - name: country_name
+        description: "Full country name as returned by ad networks (e.g., 'United States')"
+      - name: country_code
+        description: "Lowercase ISO 3166-1 alpha-2 code (e.g., 'us')"
+
+  - name: google_geo_targets
+    config:
+      schema: nexus
+    description: "Mapping of Google Ads criterion IDs to ISO country codes. Required for Google geographic_view reports."
+    columns:
+      - name: criterion_id
+        description: "Google Ads geo target criterion ID (e.g., 2840 for United States)"
+      - name: country_code
+        description: "Lowercase ISO 3166-1 alpha-2 code (e.g., 'us')"
+      - name: country_name
+        description: "Full country name for reference"
+
+  - name: linkedin_geo_urn
+    config:
+      schema: nexus
+    description: "Mapping of LinkedIn geo URNs to ISO country codes. LinkedIn API returns member_country as numeric URNs."
+    columns:
+      - name: geo_urn
+        description: "LinkedIn geo URN identifier (numeric, e.g., 103644278 for United States)"
+      - name: country_name
+        description: "Full country name for reference"
+      - name: country_code
+        description: "Lowercase ISO 3166-1 alpha-2 code (e.g., 'us')"

@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: fivetran_metadata
+    database: mavan-analytics
+    schema: fivetran_metadata
+    tables:
+      - name: connector_type
+      
+  - name: facebook_ads
+    database: mavan-analytics
+    schema: facebook_ads_v2
+    tables:
+      - name: account_history
+      - name: campaign_history
+      
+  - name: facebook_ads_v2
+    database: mavan-analytics
+    schema: facebook_ads_v2
+    tables:
+      - name: account_history
+      - name: campaign_history
+      - name: campaign_country_daily
+
+  - name: google_ads_v2
+    database: mavan-analytics
+    schema: google_ads_v2
+    tables:
+      - name: account_history
+      - name: campaign_history
+      - name: campaign_country_report
+      
+  - name: linkedin_ads
+    database: mavan-analytics
+    schema: linkedin_ads
+    tables:
+      - name: account_history
+      - name: campaign_history
+      - name: campaign_group_history
+      - name: monthly_ad_analytics_by_member_country
+      - name: ad_analytics_by_campaign
+      
+  - name: tiktok_ads
+    database: mavan-analytics
+    schema: tiktok_ads
+    tables:
+      - name: advertiser
+      - name: campaign_history
+      - name: campaign_report_daily
+      - name: campaign_country_report
+
+  - name: bingads
+    database: mavan-analytics
+    schema: bingads
+    tables:
+      - name: account_history
+      - name: campaign_history
+      - name: ad_group_history
+      - name: ad_history
+      - name: ad_performance_daily_report
+      - name: destination_url_performance_daily_report
+
+  - name: bingads_microsoft_ads
+    database: mavan-analytics
+    schema: bingads_microsoft_ads
+    tables:
+      - name: microsoft_ads__campaign_country_report

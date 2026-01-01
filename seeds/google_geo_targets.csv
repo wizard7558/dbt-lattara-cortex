@@ -1,0 +1,238 @@
+criterion_id,country_code,country_name
+2004,af,Afghanistan
+2008,al,Albania
+2010,aq,Antarctica
+2012,dz,Algeria
+2016,as,American Samoa
+2020,ad,Andorra
+2024,ao,Angola
+2028,ag,Antigua and Barbuda
+2031,az,Azerbaijan
+2032,ar,Argentina
+2036,au,Australia
+2040,at,Austria
+2044,bs,Bahamas
+2048,bh,Bahrain
+2050,bd,Bangladesh
+2051,am,Armenia
+2052,bb,Barbados
+2056,be,Belgium
+2060,bm,Bermuda
+2064,bt,Bhutan
+2068,bo,Bolivia
+2070,ba,Bosnia and Herzegovina
+2072,bw,Botswana
+2076,br,Brazil
+2084,bz,Belize
+2086,io,British Indian Ocean Territory
+2090,sb,Solomon Islands
+2092,vg,British Virgin Islands
+2096,bn,Brunei
+2100,bg,Bulgaria
+2104,mm,Myanmar
+2108,bi,Burundi
+2112,by,Belarus
+2116,kh,Cambodia
+2120,cm,Cameroon
+2124,ca,Canada
+2132,cv,Cape Verde
+2136,ky,Cayman Islands
+2140,cf,Central African Republic
+2144,lk,Sri Lanka
+2148,td,Chad
+2152,cl,Chile
+2156,cn,China
+2158,tw,Taiwan
+2170,co,Colombia
+2174,km,Comoros
+2175,yt,Mayotte
+2178,cg,Congo
+2180,cd,Democratic Republic of the Congo
+2184,ck,Cook Islands
+2188,cr,Costa Rica
+2191,hr,Croatia
+2192,cu,Cuba
+2196,cy,Cyprus
+2203,cz,Czech Republic
+2204,bj,Benin
+2208,dk,Denmark
+2212,dm,Dominica
+2214,do,Dominican Republic
+2218,ec,Ecuador
+2222,sv,El Salvador
+2226,gq,Equatorial Guinea
+2231,et,Ethiopia
+2232,er,Eritrea
+2233,ee,Estonia
+2234,fo,Faroe Islands
+2238,fk,Falkland Islands
+2242,fj,Fiji
+2246,fi,Finland
+2250,fr,France
+2254,gf,French Guiana
+2258,pf,French Polynesia
+2262,dj,Djibouti
+2266,ga,Gabon
+2268,ge,Georgia
+2270,gm,Gambia
+2275,ps,Palestine
+2276,de,Germany
+2288,gh,Ghana
+2292,gi,Gibraltar
+2296,ki,Kiribati
+2300,gr,Greece
+2304,gl,Greenland
+2308,gd,Grenada
+2312,gp,Guadeloupe
+2316,gu,Guam
+2320,gt,Guatemala
+2324,gn,Guinea
+2328,gy,Guyana
+2332,ht,Haiti
+2340,hn,Honduras
+2344,hk,Hong Kong
+2348,hu,Hungary
+2352,is,Iceland
+2356,in,India
+2360,id,Indonesia
+2364,ir,Iran
+2368,iq,Iraq
+2372,ie,Ireland
+2376,il,Israel
+2380,it,Italy
+2384,ci,Ivory Coast
+2388,jm,Jamaica
+2392,jp,Japan
+2398,kz,Kazakhstan
+2400,jo,Jordan
+2404,ke,Kenya
+2410,kr,South Korea
+2414,kw,Kuwait
+2417,kg,Kyrgyzstan
+2418,la,Laos
+2422,lb,Lebanon
+2426,ls,Lesotho
+2428,lv,Latvia
+2430,lr,Liberia
+2434,ly,Libya
+2438,li,Liechtenstein
+2440,lt,Lithuania
+2442,lu,Luxembourg
+2446,mo,Macau
+2450,mg,Madagascar
+2454,mw,Malawi
+2458,my,Malaysia
+2462,mv,Maldives
+2466,ml,Mali
+2470,mt,Malta
+2474,mq,Martinique
+2478,mr,Mauritania
+2480,mu,Mauritius
+2484,mx,Mexico
+2492,mc,Monaco
+2496,mn,Mongolia
+2498,md,Moldova
+2499,me,Montenegro
+2500,ms,Montserrat
+2504,ma,Morocco
+2508,mz,Mozambique
+2512,om,Oman
+2516,na,Namibia
+2520,nr,Nauru
+2524,np,Nepal
+2528,nl,Netherlands
+2531,cw,Curacao
+2533,aw,Aruba
+2534,sx,Sint Maarten
+2535,bq,Caribbean Netherlands
+2540,nc,New Caledonia
+2548,vu,Vanuatu
+2554,nz,New Zealand
+2558,ni,Nicaragua
+2562,ne,Niger
+2566,ng,Nigeria
+2570,nu,Niue
+2574,nf,Norfolk Island
+2578,no,Norway
+2580,mp,Northern Mariana Islands
+2583,fm,Micronesia
+2584,mh,Marshall Islands
+2585,pw,Palau
+2586,pk,Pakistan
+2591,pa,Panama
+2598,pg,Papua New Guinea
+2600,py,Paraguay
+2604,pe,Peru
+2608,ph,Philippines
+2616,pl,Poland
+2620,pt,Portugal
+2624,gw,Guinea-Bissau
+2626,tl,Timor-Leste
+2630,pr,Puerto Rico
+2634,qa,Qatar
+2638,re,Reunion
+2642,ro,Romania
+2646,rw,Rwanda
+2652,bl,Saint Barthelemy
+2654,sh,Saint Helena
+2659,kn,Saint Kitts and Nevis
+2660,ai,Anguilla
+2662,lc,Saint Lucia
+2663,mf,Saint Martin
+2666,pm,Saint Pierre and Miquelon
+2670,vc,Saint Vincent and the Grenadines
+2674,sm,San Marino
+2678,st,Sao Tome and Principe
+2682,sa,Saudi Arabia
+2686,sn,Senegal
+2688,rs,Serbia
+2690,sc,Seychelles
+2694,sl,Sierra Leone
+2702,sg,Singapore
+2703,sk,Slovakia
+2704,vn,Vietnam
+2705,si,Slovenia
+2706,so,Somalia
+2710,za,South Africa
+2716,zw,Zimbabwe
+2724,es,Spain
+2728,ss,South Sudan
+2732,sd,Sudan
+2736,eh,Western Sahara
+2740,sr,Suriname
+2744,sj,Svalbard and Jan Mayen
+2748,sz,Eswatini
+2752,se,Sweden
+2756,ch,Switzerland
+2760,sy,Syria
+2762,tj,Tajikistan
+2764,th,Thailand
+2768,tg,Togo
+2776,to,Tonga
+2780,tt,Trinidad and Tobago
+2784,ae,United Arab Emirates
+2788,tn,Tunisia
+2792,tr,Turkey
+2795,tm,Turkmenistan
+2796,tc,Turks and Caicos Islands
+2798,tv,Tuvalu
+2800,ug,Uganda
+2804,ua,Ukraine
+2807,mk,North Macedonia
+2818,eg,Egypt
+2826,gb,United Kingdom
+2831,gg,Guernsey
+2832,je,Jersey
+2833,im,Isle of Man
+2834,tz,Tanzania
+2840,us,United States
+2850,vi,U.S. Virgin Islands
+2854,bf,Burkina Faso
+2858,uy,Uruguay
+2860,uz,Uzbekistan
+2862,ve,Venezuela
+2876,wf,Wallis and Futuna
+2882,ws,Samoa
+2887,ye,Yemen
+2894,zm,Zambia
+2900,xk,Kosovo
