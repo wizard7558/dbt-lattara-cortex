@@ -799,10 +799,10 @@ google_pmax_performance AS (
 -- --------------------------------------------------------------------
 all_performance AS (
   SELECT * FROM facebook_performance
---   UNION ALL
---   SELECT * FROM google_performance
---   UNION ALL
---   SELECT * FROM google_pmax_performance
+  UNION ALL
+  SELECT * FROM google_performance
+  UNION ALL
+  SELECT * FROM google_pmax_performance
 --   UNION ALL
 --   SELECT * FROM linkedin_performance
 --   UNION ALL
