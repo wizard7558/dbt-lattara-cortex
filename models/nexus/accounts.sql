@@ -1,10 +1,4 @@
-{{
-  config(
-    materialized='incremental',
-    unique_key='id',
-    merge_update_columns = ['name'],
-  )
-}}
+
 
 WITH facebook_latest AS (
   SELECT
@@ -123,4 +117,22 @@ all_accounts AS (
 --   WHERE rn = 1
 )
 
-SELECT * FROM all_accounts
+SELECT aa.id,
+    aa.name,
+    aa.ad_network_id,
+    prod.id as product_id,
+    prod.organization_id,
+    kpi_1,
+    kpi_2,
+    kpi_3,
+    kpi_4,
+    kpi_5,
+    kpi_6,
+    kpi_7,
+    kpi_8,
+    kpi_9,
+    kpi_10
+FROM all_accounts aa
+left join `cortex.products` prod
+on aa.name = prod.name
+and aa.ad_network_id = prod.ad_network_id

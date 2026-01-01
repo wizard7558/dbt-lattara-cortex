@@ -1,10 +1,4 @@
-{{
-  config(
-    materialized='incremental',
-    unique_key='id',
-    schema='cortex'
-  )
-}}
+
 
 WITH facebook_campaign_latest AS (
   SELECT

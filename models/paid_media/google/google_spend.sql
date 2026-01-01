@@ -12,7 +12,7 @@ SELECT date
         , sum(cost_micros)/1000000 as spend
         , sum(impressions) as impressions
         , sum(clicks) as clicks
-FROM `mavan-analytics.google_ads_v2.keyword_stats` kws
+FROM `google_ads_v2.keyword_stats` kws
 LEFT JOIN {{ ref('google_accounts') }} acc
 on acc.customer_id = kws.customer_id
 LEFT JOIN {{ ref('google_campaigns') }} cam
