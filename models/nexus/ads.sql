@@ -1,10 +1,4 @@
-{{
-  config(
-    materialized='incremental',
-    unique_key='id',
-    schema='cortex'
-  )
-}}
+
 
 WITH facebook_ad_latest AS (
   SELECT
@@ -209,6 +203,6 @@ FROM all_ads a
 LEFT JOIN {{ ref('campaigns') }} c
   ON a.campaign_id = c.id
 
-{% if is_incremental() %}
-WHERE a.id NOT IN (SELECT id FROM {{ this }})
-{% endif %}
+-- {% if is_incremental() %}
+-- WHERE a.id NOT IN (SELECT id FROM {{ this }})
+-- {% endif %}
