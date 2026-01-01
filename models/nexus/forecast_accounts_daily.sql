@@ -2,7 +2,7 @@ WITH
 active_ads AS (
     SELECT
         ad_id
-    FROM `mavan-analytics.nexus.kpi_creative_daily`
+    FROM {{ ref('kpi_creative_daily') }}
     WHERE 
         latest_date = DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY) -- Always process from the last full day.
 ),

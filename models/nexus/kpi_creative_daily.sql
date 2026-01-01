@@ -32,7 +32,7 @@ facebook_dates AS (
     ad_id,
     MIN(CAST(date AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date AS DATE)), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.facebook_ads_v2.basic_ad`
+  FROM `facebook_ads_v2.basic_ad`
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
 ),
@@ -43,7 +43,7 @@ facebook_conversion_names AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_count
-  FROM `mavan-analytics.facebook_ads_v2.basic_ad_actions`
+  FROM `facebook_ads.basic_ad_actions`
   GROUP BY date, ad_id, action_type
 ),
 
@@ -53,7 +53,7 @@ facebook_conversion_values AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_value
-  FROM `mavan-analytics.facebook_ads_v2.basic_ad_action_values`
+  FROM `facebook_ads.basic_ad_action_values`
   GROUP BY date, ad_id, action_type
 ),
 
@@ -92,7 +92,7 @@ facebook_base AS (
       ad_set_id,
       campaign_id,
       ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-    FROM `mavan-analytics.facebook_ads_v2.ad_history`
+    FROM `facebook_ads.ad_history`
   ) ah
     ON CAST(fb.ad_id AS INT64) = ah.id
     AND ah.rn = 1
@@ -150,7 +150,7 @@ facebook_performance AS (
   LEFT JOIN facebook_conversions fc
     ON fb.date = fc.date
     AND fb.ad_id = fc.ad_id
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
     ON fb.account_id = a.id
   GROUP BY fb.date, fb.earliest_date, fb.latest_date, fb.ad_id, fb.adset_id, fb.campaign_id, fb.account_id
 ),
@@ -158,655 +158,655 @@ facebook_performance AS (
 -- SELECT * from facebook_performance
 -- ORDER BY ad_id;
 
---------------------------------------------------------------------
--- Google Performance
---------------------------------------------------------------------
-google_dates AS (
-  SELECT
-    inputs.at_date,
-    ad_id,
-    MIN(CAST(date_day AS DATE)) AS earliest_date,
-    LEAST(MAX(CAST(date_day AS DATE)), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report`
-  CROSS JOIN inputs
-  GROUP BY ad_id, inputs.at_date
-),
+-- --------------------------------------------------------------------
+-- -- Google Performance
+-- --------------------------------------------------------------------
+-- google_dates AS (
+--   SELECT
+--     inputs.at_date,
+--     ad_id,
+--     MIN(CAST(date_day AS DATE)) AS earliest_date,
+--     LEAST(MAX(CAST(date_day AS DATE)), inputs.at_date) AS latest_date
+--   FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report`
+--   CROSS JOIN inputs
+--   GROUP BY ad_id, inputs.at_date
+-- ),
 
-google_conversions AS (
-  SELECT
-    CAST(date AS DATE) AS date,
-    CONCAT('google_ads_', CAST(ad_id AS STRING)) AS ad_id,
-    conversion_action_name AS conversion_name,
-    SUM(all_conversions) AS conversion_count,
-    SUM(all_conversions_value) AS conversion_value
-  FROM `mavan-analytics.google_ads_v2.ads_conversions`
-  WHERE conversion_action_name IS NOT NULL
-  GROUP BY date, ad_id, conversion_action_name
-),
+-- google_conversions AS (
+--   SELECT
+--     CAST(date AS DATE) AS date,
+--     CONCAT('google_ads_', CAST(ad_id AS STRING)) AS ad_id,
+--     conversion_action_name AS conversion_name,
+--     SUM(all_conversions) AS conversion_count,
+--     SUM(all_conversions_value) AS conversion_value
+--   FROM `mavan-analytics.google_ads_v2.ads_conversions`
+--   WHERE conversion_action_name IS NOT NULL
+--   GROUP BY date, ad_id, conversion_action_name
+-- ),
 
-google_base AS (
-  SELECT
-    CAST(gr.date_day AS DATE) AS date,
-    gd.earliest_date,
-    gd.latest_date,
-    CONCAT('google_ads_', CAST(gr.ad_id AS STRING)) AS ad_id,
-    CONCAT('google_ads_', gr.ad_group_id) AS adset_id,
-    CONCAT('google_ads_', CAST(gr.campaign_id AS STRING)) AS campaign_id,
-    CONCAT('google_ads_', CAST(gr.account_id AS STRING)) AS account_id,
-    COALESCE(gr.spend, 0) AS SPEND,
-    COALESCE(gr.impressions, 0) AS impressions,
-    COALESCE(gr.clicks, 0) AS clicks,
-  FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report` gr
-  CROSS JOIN inputs
-  INNER JOIN google_dates gd
-    ON gr.ad_id = gd.ad_id
-    AND gd.at_date = inputs.at_date
-  WHERE gr.date_day = inputs.at_date
-),
+-- google_base AS (
+--   SELECT
+--     CAST(gr.date_day AS DATE) AS date,
+--     gd.earliest_date,
+--     gd.latest_date,
+--     CONCAT('google_ads_', CAST(gr.ad_id AS STRING)) AS ad_id,
+--     CONCAT('google_ads_', gr.ad_group_id) AS adset_id,
+--     CONCAT('google_ads_', CAST(gr.campaign_id AS STRING)) AS campaign_id,
+--     CONCAT('google_ads_', CAST(gr.account_id AS STRING)) AS account_id,
+--     COALESCE(gr.spend, 0) AS SPEND,
+--     COALESCE(gr.impressions, 0) AS impressions,
+--     COALESCE(gr.clicks, 0) AS clicks,
+--   FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report` gr
+--   CROSS JOIN inputs
+--   INNER JOIN google_dates gd
+--     ON gr.ad_id = gd.ad_id
+--     AND gd.at_date = inputs.at_date
+--   WHERE gr.date_day = inputs.at_date
+-- ),
 
-google_performance AS (
-  SELECT
-    gb.date,
-    gb.earliest_date,
-    gb.latest_date,
-    gb.ad_id,
-    gb.adset_id,
-    gb.campaign_id,
-    gb.account_id AS account_id,
-    MAX(gb.spend) AS spend,
-    MAX(gb.impressions) as impressions,
-    MAX(gb.clicks) as clicks,
+-- google_performance AS (
+--   SELECT
+--     gb.date,
+--     gb.earliest_date,
+--     gb.latest_date,
+--     gb.ad_id,
+--     gb.adset_id,
+--     gb.campaign_id,
+--     gb.account_id AS account_id,
+--     MAX(gb.spend) AS spend,
+--     MAX(gb.impressions) as impressions,
+--     MAX(gb.clicks) as clicks,
 
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_value ELSE 0 END) AS kpi_10_value
-
-
-
-  FROM google_base gb
-  LEFT JOIN google_conversions gc
-    ON gb.date = gc.date
-    AND gb.ad_id = gc.ad_id
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
-    ON gb.account_id = a.id
-  GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
-),
-
---------------------------------------------------------------------
--- Google Performance Max (PMax) - Campaign-level data
--- PMax campaigns don't have traditional ads/adsets, they use Asset Groups
--- We source from campaign_stats instead of google_ads__ad_report
---------------------------------------------------------------------
-google_pmax_campaign_ids AS (
-  -- Get all Performance Max campaign IDs
-  SELECT DISTINCT id as campaign_id
-  FROM `mavan-analytics.google_ads_v2.campaign_history`
-  WHERE advertising_channel_type = 'PERFORMANCE_MAX'
-),
-
-google_pmax_dates AS (
-  SELECT
-    inputs.at_date,
-    cs.id as campaign_id,
-    MIN(cs.date) AS earliest_date,
-    LEAST(MAX(cs.date), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
-  INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
-  CROSS JOIN inputs
-  GROUP BY cs.id, inputs.at_date
-),
-
-google_pmax_conversions AS (
-  SELECT
-    cc.date,
-    CONCAT('google_ads_', CAST(cc.id AS STRING), '_pmax') AS ad_id,
-    cc.conversion_action_name AS conversion_name,
-    SUM(cc.all_conversions) AS conversion_count,
-    SUM(cc.all_conversions_value) AS conversion_value
-  FROM `mavan-analytics.google_ads_v2.campaign_conversions` cc
-  INNER JOIN google_pmax_campaign_ids pmax ON cc.id = pmax.campaign_id
-  WHERE cc.conversion_action_name IS NOT NULL
-  GROUP BY cc.date, cc.id, cc.conversion_action_name
-),
-
-google_pmax_base AS (
-  SELECT
-    cs.date,
-    pd.earliest_date,
-    pd.latest_date,
-    -- For PMax, ad_id and adset_id are synthetic (campaign-level)
-    CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS ad_id,
-    CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS adset_id,
-    CONCAT('google_ads_', CAST(cs.id AS STRING)) AS campaign_id,
-    CONCAT('google_ads_', CAST(cs.customer_id AS STRING)) AS account_id,
-    SUM(COALESCE(cs.cost_micros, 0)) / 1000000.0 AS spend,
-    SUM(COALESCE(cs.impressions, 0)) AS impressions,
-    SUM(COALESCE(cs.clicks, 0)) AS clicks
-  FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
-  INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
-  CROSS JOIN inputs
-  INNER JOIN google_pmax_dates pd
-    ON cs.id = pd.campaign_id
-    AND pd.at_date = inputs.at_date
-  WHERE cs.date = inputs.at_date
-  GROUP BY cs.date, pd.earliest_date, pd.latest_date, cs.id, cs.customer_id
-),
-
-google_pmax_performance AS (
-  SELECT
-    pb.date,
-    pb.earliest_date,
-    pb.latest_date,
-    pb.ad_id,
-    pb.adset_id,
-    pb.campaign_id,
-    pb.account_id,
-    MAX(pb.spend) AS spend,
-    MAX(pb.impressions) AS impressions,
-    MAX(pb.clicks) AS clicks,
-
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_value ELSE 0 END) AS kpi_10_value
-
-  FROM google_pmax_base pb
-  LEFT JOIN google_pmax_conversions pc
-    ON pb.date = pc.date
-    AND pb.ad_id = pc.ad_id
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
-    ON pb.account_id = a.id
-  GROUP BY pb.date, pb.earliest_date, pb.latest_date, pb.ad_id, pb.adset_id, pb.campaign_id, pb.account_id
-),
-
--- SELECT * from google_performance
--- ORDER BY ad_id;
+--     MAX(a.kpi_1) AS kpi_1_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_count ELSE 0 END) AS kpi_1_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_value ELSE 0 END) AS kpi_1_value,
+--     MAX(a.kpi_2) AS kpi_2_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_count ELSE 0 END) AS kpi_2_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_value ELSE 0 END) AS kpi_2_value,
+--     MAX(a.kpi_3) AS kpi_3_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_count ELSE 0 END) AS kpi_3_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_value ELSE 0 END) AS kpi_3_value,
+--     MAX(a.kpi_4) AS kpi_4_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_count ELSE 0 END) AS kpi_4_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_value ELSE 0 END) AS kpi_4_value,
+--     MAX(a.kpi_5) AS kpi_5_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_count ELSE 0 END) AS kpi_5_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_value ELSE 0 END) AS kpi_5_value,
+--     MAX(a.kpi_6) AS kpi_6_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_count ELSE 0 END) AS kpi_6_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_value ELSE 0 END) AS kpi_6_value,
+--     MAX(a.kpi_7) AS kpi_7_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_count ELSE 0 END) AS kpi_7_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_value ELSE 0 END) AS kpi_7_value,
+--     MAX(a.kpi_8) AS kpi_8_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_count ELSE 0 END) AS kpi_8_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_value ELSE 0 END) AS kpi_8_value,
+--     MAX(a.kpi_9) AS kpi_9_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_count ELSE 0 END) AS kpi_9_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_value ELSE 0 END) AS kpi_9_value,
+--     MAX(a.kpi_10) AS kpi_10_name,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_count ELSE 0 END) AS kpi_10_count,
+--     SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_value ELSE 0 END) AS kpi_10_value
 
 
---------------------------------------------------------------------
--- Linkedin Performance
--- NOTE: LinkedIn hierarchy: Account -> Campaign Group (=Nexus Campaign) -> Campaign (=Nexus AdSet) -> Creative (=Nexus Ad)
--- Conversion data comes from ad_analytics_by_creative_with_conversion_breakdown joined with conversion_history
---------------------------------------------------------------------
-linkedin_dates AS (
-  SELECT
-    inputs.at_date,
-    creative_id,
-    MIN(CAST(day AS DATE)) AS earliest_date,
-    LEAST(MAX(CAST(day AS DATE)), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative`
-  CROSS JOIN inputs
-  GROUP BY creative_id, inputs.at_date
-),
 
--- Conversion data from breakdown table joined with conversion_history for names
-linkedin_conversions AS (
-  SELECT
-    CAST(cb.day AS DATE) AS date,
-    CONCAT('linkedin_ads_', CAST(cb.creative_id AS STRING)) AS ad_id,
-    ch.name AS conversion_name,
-    SUM(cb.external_website_conversions) AS conversion_count,
-    SUM(COALESCE(CAST(cb.conversion_value_in_local_currency AS FLOAT64), 0.0)) AS conversion_value
-  FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative_with_conversion_breakdown` cb
-  LEFT JOIN `mavan-analytics.linkedin_ads.conversion_history` ch
-    ON cb.conversion_id = ch.id
-  WHERE ch.name IS NOT NULL
-  GROUP BY 1, 2, 3
-),
+--   FROM google_base gb
+--   LEFT JOIN google_conversions gc
+--     ON gb.date = gc.date
+--     AND gb.ad_id = gc.ad_id
+--   LEFT JOIN `mavan-analytics.nexus.accounts` a
+--     ON gb.account_id = a.id
+--   GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
+-- ),
 
--- Base metrics with hierarchy from creative_history and campaign_history
-linkedin_base AS (
-  SELECT
-    CAST(la.day AS DATE) AS date,
-    ld.earliest_date,
-    ld.latest_date,
-    CONCAT('linkedin_ads_', CAST(la.creative_id AS STRING)) AS ad_id,
-    CONCAT('linkedin_ads_', CAST(crh.campaign_id AS STRING)) AS adset_id,
-    CONCAT('linkedin_ads_', CAST(cmh.campaign_group_id AS STRING)) AS campaign_id,
-    CONCAT('linkedin_ads_', CAST(cmh.account_id AS STRING)) AS account_id,
-    COALESCE(CAST(la.cost_in_usd AS FLOAT64), 0) AS spend,
-    COALESCE(la.impressions, 0) AS impressions,
-    COALESCE(la.clicks, 0) AS clicks
-  FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative` la
-  CROSS JOIN inputs
-  INNER JOIN linkedin_dates ld
-    ON la.creative_id = ld.creative_id
-    AND ld.at_date = inputs.at_date
-  -- Get campaign_id from creative_history
-  INNER JOIN (
-    SELECT
-      id,
-      campaign_id,
-      ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn
-    FROM `mavan-analytics.linkedin_ads.creative_history`
-  ) crh
-    ON la.creative_id = crh.id
-    AND crh.rn = 1
-  -- Get campaign_group_id and account_id from campaign_history
-  INNER JOIN (
-    SELECT
-      id,
-      campaign_group_id,
-      account_id,
-      ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn
-    FROM `mavan-analytics.linkedin_ads.campaign_history`
-  ) cmh
-    ON crh.campaign_id = cmh.id
-    AND cmh.rn = 1
-  WHERE CAST(la.day AS DATE) = inputs.at_date
-),
+-- --------------------------------------------------------------------
+-- -- Google Performance Max (PMax) - Campaign-level data
+-- -- PMax campaigns don't have traditional ads/adsets, they use Asset Groups
+-- -- We source from campaign_stats instead of google_ads__ad_report
+-- --------------------------------------------------------------------
+-- google_pmax_campaign_ids AS (
+--   -- Get all Performance Max campaign IDs
+--   SELECT DISTINCT id as campaign_id
+--   FROM `mavan-analytics.google_ads_v2.campaign_history`
+--   WHERE advertising_channel_type = 'PERFORMANCE_MAX'
+-- ),
 
-linkedin_performance AS (
-  SELECT
-    lb.date,
-    lb.earliest_date,
-    lb.latest_date,
-    lb.ad_id,
-    lb.adset_id,
-    lb.campaign_id,
-    lb.account_id,
-    MAX(lb.spend) as spend,
-    MAX(lb.impressions) as impressions,
-    MAX(lb.clicks) as clicks,
+-- google_pmax_dates AS (
+--   SELECT
+--     inputs.at_date,
+--     cs.id as campaign_id,
+--     MIN(cs.date) AS earliest_date,
+--     LEAST(MAX(cs.date), inputs.at_date) AS latest_date
+--   FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
+--   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
+--   CROSS JOIN inputs
+--   GROUP BY cs.id, inputs.at_date
+-- ),
 
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_value ELSE 0 END) AS kpi_10_value
+-- google_pmax_conversions AS (
+--   SELECT
+--     cc.date,
+--     CONCAT('google_ads_', CAST(cc.id AS STRING), '_pmax') AS ad_id,
+--     cc.conversion_action_name AS conversion_name,
+--     SUM(cc.all_conversions) AS conversion_count,
+--     SUM(cc.all_conversions_value) AS conversion_value
+--   FROM `mavan-analytics.google_ads_v2.campaign_conversions` cc
+--   INNER JOIN google_pmax_campaign_ids pmax ON cc.id = pmax.campaign_id
+--   WHERE cc.conversion_action_name IS NOT NULL
+--   GROUP BY cc.date, cc.id, cc.conversion_action_name
+-- ),
 
-  FROM linkedin_base lb
-  LEFT JOIN linkedin_conversions lc
-    ON lb.date = lc.date
-    AND lb.ad_id = lc.ad_id
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
-    ON lb.account_id = a.id
+-- google_pmax_base AS (
+--   SELECT
+--     cs.date,
+--     pd.earliest_date,
+--     pd.latest_date,
+--     -- For PMax, ad_id and adset_id are synthetic (campaign-level)
+--     CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS ad_id,
+--     CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS adset_id,
+--     CONCAT('google_ads_', CAST(cs.id AS STRING)) AS campaign_id,
+--     CONCAT('google_ads_', CAST(cs.customer_id AS STRING)) AS account_id,
+--     SUM(COALESCE(cs.cost_micros, 0)) / 1000000.0 AS spend,
+--     SUM(COALESCE(cs.impressions, 0)) AS impressions,
+--     SUM(COALESCE(cs.clicks, 0)) AS clicks
+--   FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
+--   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
+--   CROSS JOIN inputs
+--   INNER JOIN google_pmax_dates pd
+--     ON cs.id = pd.campaign_id
+--     AND pd.at_date = inputs.at_date
+--   WHERE cs.date = inputs.at_date
+--   GROUP BY cs.date, pd.earliest_date, pd.latest_date, cs.id, cs.customer_id
+-- ),
 
-  GROUP BY lb.date, lb.earliest_date, lb.latest_date, lb.ad_id, lb.adset_id, lb.campaign_id, lb.account_id
-),
+-- google_pmax_performance AS (
+--   SELECT
+--     pb.date,
+--     pb.earliest_date,
+--     pb.latest_date,
+--     pb.ad_id,
+--     pb.adset_id,
+--     pb.campaign_id,
+--     pb.account_id,
+--     MAX(pb.spend) AS spend,
+--     MAX(pb.impressions) AS impressions,
+--     MAX(pb.clicks) AS clicks,
 
--- SELECT * from linkedin_performance
--- ORDER BY ad_id;
+--     MAX(a.kpi_1) AS kpi_1_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_count ELSE 0 END) AS kpi_1_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_value ELSE 0 END) AS kpi_1_value,
+--     MAX(a.kpi_2) AS kpi_2_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_count ELSE 0 END) AS kpi_2_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_value ELSE 0 END) AS kpi_2_value,
+--     MAX(a.kpi_3) AS kpi_3_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_count ELSE 0 END) AS kpi_3_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_value ELSE 0 END) AS kpi_3_value,
+--     MAX(a.kpi_4) AS kpi_4_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_count ELSE 0 END) AS kpi_4_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_value ELSE 0 END) AS kpi_4_value,
+--     MAX(a.kpi_5) AS kpi_5_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_count ELSE 0 END) AS kpi_5_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_value ELSE 0 END) AS kpi_5_value,
+--     MAX(a.kpi_6) AS kpi_6_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_count ELSE 0 END) AS kpi_6_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_value ELSE 0 END) AS kpi_6_value,
+--     MAX(a.kpi_7) AS kpi_7_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_count ELSE 0 END) AS kpi_7_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_value ELSE 0 END) AS kpi_7_value,
+--     MAX(a.kpi_8) AS kpi_8_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_count ELSE 0 END) AS kpi_8_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_value ELSE 0 END) AS kpi_8_value,
+--     MAX(a.kpi_9) AS kpi_9_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_count ELSE 0 END) AS kpi_9_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_value ELSE 0 END) AS kpi_9_value,
+--     MAX(a.kpi_10) AS kpi_10_name,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_count ELSE 0 END) AS kpi_10_count,
+--     SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_value ELSE 0 END) AS kpi_10_value
 
---------------------------------------------------------------------
--- TikTok Performance (using ad_report_hourly - aggregated to daily)
---------------------------------------------------------------------
-tiktok_dates AS (
-  SELECT
-    inputs.at_date,
-    ad_id,
-    MIN(DATE(stat_time_hour)) AS earliest_date,
-    LEAST(MAX(DATE(stat_time_hour)), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
-  CROSS JOIN inputs
-  GROUP BY ad_id, inputs.at_date
-),
+--   FROM google_pmax_base pb
+--   LEFT JOIN google_pmax_conversions pc
+--     ON pb.date = pc.date
+--     AND pb.ad_id = pc.ad_id
+--   LEFT JOIN `mavan-analytics.nexus.accounts` a
+--     ON pb.account_id = a.id
+--   GROUP BY pb.date, pb.earliest_date, pb.latest_date, pb.ad_id, pb.adset_id, pb.campaign_id, pb.account_id
+-- ),
 
--- Unpivot TikTok conversion columns to rows
--- NOTE: TikTok stores conversions as inline columns (not rows like Facebook's basic_ad_actions table)
-tiktok_conversion_counts AS (
-  SELECT date, ad_id, conversion_name, SUM(conversion_count) AS conversion_count
-  FROM (
-    SELECT
-      DATE(stat_time_hour) AS date,
-      CONCAT('tiktok_ads_', CAST(ad_id AS STRING)) AS ad_id,
-      conversion_name,
-      conversion_count
-    FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
-    UNPIVOT (conversion_count FOR conversion_name IN (
-      on_web_subscribe, user_registration, purchase, checkout, initiate_checkout,
-      complete_payment, view_content, add_to_wishlist, page_event_search, download_start,
-      web_event_add_to_cart, app_event_add_to_cart, registration, sales_lead, conversion,
-      on_web_add_to_wishlist
-    ))
-  )
-  GROUP BY 1, 2, 3
-),
+-- -- SELECT * from google_performance
+-- -- ORDER BY ad_id;
 
-tiktok_conversion_values AS (
-  SELECT date, ad_id, conversion_name, SUM(conversion_value) AS conversion_value
-  FROM (
-    SELECT
-      DATE(stat_time_hour) AS date,
-      CONCAT('tiktok_ads_', CAST(ad_id AS STRING)) AS ad_id,
-      conversion_name,
-      conversion_value
-    FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
-    UNPIVOT (conversion_value FOR conversion_name IN (
-      total_on_web_subscribe_value AS 'on_web_subscribe',
-      total_user_registration_value AS 'user_registration',
-      total_purchase_value AS 'purchase',
-      total_checkout_value AS 'checkout',
-      total_initiate_checkout_value AS 'initiate_checkout',
-      total_view_content_value AS 'view_content',
-      total_add_to_wishlist_value AS 'add_to_wishlist',
-      total_page_event_search_value AS 'page_event_search',
-      total_download_start_value AS 'download_start',
-      total_web_event_add_to_cart_value AS 'web_event_add_to_cart',
-      total_app_event_add_to_cart_value AS 'app_event_add_to_cart',
-      total_sales_lead_value AS 'sales_lead',
-      total_on_web_add_to_wishlist_value AS 'on_web_add_to_wishlist'
-    ))
-  )
-  GROUP BY 1, 2, 3
-),
 
-tiktok_conversions AS (
-  SELECT
-    tc.date,
-    tc.ad_id,
-    tc.conversion_name,
-    tc.conversion_count,
-    COALESCE(tv.conversion_value, 0.0) AS conversion_value
-  FROM tiktok_conversion_counts tc
-  LEFT JOIN tiktok_conversion_values tv
-    ON tc.date = tv.date
-    AND tc.ad_id = tv.ad_id
-    AND tc.conversion_name = tv.conversion_name
-  WHERE tc.conversion_count > 0 OR tv.conversion_value > 0
-),
+-- --------------------------------------------------------------------
+-- -- Linkedin Performance
+-- -- NOTE: LinkedIn hierarchy: Account -> Campaign Group (=Nexus Campaign) -> Campaign (=Nexus AdSet) -> Creative (=Nexus Ad)
+-- -- Conversion data comes from ad_analytics_by_creative_with_conversion_breakdown joined with conversion_history
+-- --------------------------------------------------------------------
+-- linkedin_dates AS (
+--   SELECT
+--     inputs.at_date,
+--     creative_id,
+--     MIN(CAST(day AS DATE)) AS earliest_date,
+--     LEAST(MAX(CAST(day AS DATE)), inputs.at_date) AS latest_date
+--   FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative`
+--   CROSS JOIN inputs
+--   GROUP BY creative_id, inputs.at_date
+-- ),
 
-tiktok_base AS (
-  SELECT
-    DATE(tr.stat_time_hour) AS date,
-    td.earliest_date,
-    td.latest_date,
-    CONCAT('tiktok_ads_', CAST(tr.ad_id AS STRING)) AS ad_id,
-    CONCAT('tiktok_ads_', CAST(ah.adgroup_id AS STRING)) AS adset_id,
-    CONCAT('tiktok_ads_', CAST(ah.campaign_id AS STRING)) AS campaign_id,
-    CONCAT('tiktok_ads_', CAST(ah.advertiser_id AS STRING)) AS account_id,
-    SUM(tr.spend) AS spend,
-    SUM(tr.impressions) AS impressions,
-    SUM(tr.clicks) AS clicks
-  FROM `mavan-analytics.tiktok_ads.ad_report_hourly` tr
-  INNER JOIN (
-    SELECT
-      ad_id,
-      adgroup_id,
-      campaign_id,
-      advertiser_id,
-      ROW_NUMBER() OVER (PARTITION BY ad_id ORDER BY updated_at DESC) AS rn
-    FROM `mavan-analytics.tiktok_ads.ad_history`
-  ) ah
-    ON tr.ad_id = ah.ad_id
-    AND ah.rn = 1
-  CROSS JOIN inputs
-  INNER JOIN tiktok_dates td
-    ON tr.ad_id = td.ad_id
-    AND td.at_date = inputs.at_date
-  WHERE DATE(tr.stat_time_hour) = inputs.at_date
-  GROUP BY
-    DATE(tr.stat_time_hour),
-    td.earliest_date,
-    td.latest_date,
-    tr.ad_id,
-    ah.adgroup_id,
-    ah.campaign_id,
-    ah.advertiser_id
-),
+-- -- Conversion data from breakdown table joined with conversion_history for names
+-- linkedin_conversions AS (
+--   SELECT
+--     CAST(cb.day AS DATE) AS date,
+--     CONCAT('linkedin_ads_', CAST(cb.creative_id AS STRING)) AS ad_id,
+--     ch.name AS conversion_name,
+--     SUM(cb.external_website_conversions) AS conversion_count,
+--     SUM(COALESCE(CAST(cb.conversion_value_in_local_currency AS FLOAT64), 0.0)) AS conversion_value
+--   FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative_with_conversion_breakdown` cb
+--   LEFT JOIN `mavan-analytics.linkedin_ads.conversion_history` ch
+--     ON cb.conversion_id = ch.id
+--   WHERE ch.name IS NOT NULL
+--   GROUP BY 1, 2, 3
+-- ),
 
-tiktok_performance AS (
-  SELECT
-    tb.date,
-    tb.earliest_date,
-    tb.latest_date,
-    tb.ad_id,
-    tb.adset_id,
-    tb.campaign_id,
-    tb.account_id,
-    MAX(tb.spend) AS spend,
-    MAX(tb.impressions) AS impressions,
-    MAX(tb.clicks) AS clicks,
+-- -- Base metrics with hierarchy from creative_history and campaign_history
+-- linkedin_base AS (
+--   SELECT
+--     CAST(la.day AS DATE) AS date,
+--     ld.earliest_date,
+--     ld.latest_date,
+--     CONCAT('linkedin_ads_', CAST(la.creative_id AS STRING)) AS ad_id,
+--     CONCAT('linkedin_ads_', CAST(crh.campaign_id AS STRING)) AS adset_id,
+--     CONCAT('linkedin_ads_', CAST(cmh.campaign_group_id AS STRING)) AS campaign_id,
+--     CONCAT('linkedin_ads_', CAST(cmh.account_id AS STRING)) AS account_id,
+--     COALESCE(CAST(la.cost_in_usd AS FLOAT64), 0) AS spend,
+--     COALESCE(la.impressions, 0) AS impressions,
+--     COALESCE(la.clicks, 0) AS clicks
+--   FROM `mavan-analytics.linkedin_ads.ad_analytics_by_creative` la
+--   CROSS JOIN inputs
+--   INNER JOIN linkedin_dates ld
+--     ON la.creative_id = ld.creative_id
+--     AND ld.at_date = inputs.at_date
+--   -- Get campaign_id from creative_history
+--   INNER JOIN (
+--     SELECT
+--       id,
+--       campaign_id,
+--       ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn
+--     FROM `mavan-analytics.linkedin_ads.creative_history`
+--   ) crh
+--     ON la.creative_id = crh.id
+--     AND crh.rn = 1
+--   -- Get campaign_group_id and account_id from campaign_history
+--   INNER JOIN (
+--     SELECT
+--       id,
+--       campaign_group_id,
+--       account_id,
+--       ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn
+--     FROM `mavan-analytics.linkedin_ads.campaign_history`
+--   ) cmh
+--     ON crh.campaign_id = cmh.id
+--     AND cmh.rn = 1
+--   WHERE CAST(la.day AS DATE) = inputs.at_date
+-- ),
 
-    -- KPI mapping from accounts (same pattern as FB/Google/LinkedIn)
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_1 THEN tc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_1 THEN tc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_2 THEN tc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_2 THEN tc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_3 THEN tc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_3 THEN tc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_4 THEN tc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_4 THEN tc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_5 THEN tc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_5 THEN tc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_6 THEN tc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_6 THEN tc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_7 THEN tc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_7 THEN tc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_8 THEN tc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_8 THEN tc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_9 THEN tc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_9 THEN tc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_10 THEN tc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN tc.conversion_name = a.kpi_10 THEN tc.conversion_value ELSE 0 END) AS kpi_10_value
+-- linkedin_performance AS (
+--   SELECT
+--     lb.date,
+--     lb.earliest_date,
+--     lb.latest_date,
+--     lb.ad_id,
+--     lb.adset_id,
+--     lb.campaign_id,
+--     lb.account_id,
+--     MAX(lb.spend) as spend,
+--     MAX(lb.impressions) as impressions,
+--     MAX(lb.clicks) as clicks,
 
-  FROM tiktok_base tb
-  LEFT JOIN tiktok_conversions tc
-    ON tb.date = tc.date
-    AND tb.ad_id = tc.ad_id
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
-    ON tb.account_id = a.id
-  GROUP BY tb.date, tb.earliest_date, tb.latest_date, tb.ad_id, tb.adset_id, tb.campaign_id, tb.account_id
-),
+--     MAX(a.kpi_1) AS kpi_1_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_count ELSE 0 END) AS kpi_1_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_value ELSE 0 END) AS kpi_1_value,
+--     MAX(a.kpi_2) AS kpi_2_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_count ELSE 0 END) AS kpi_2_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_value ELSE 0 END) AS kpi_2_value,
+--     MAX(a.kpi_3) AS kpi_3_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_count ELSE 0 END) AS kpi_3_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_value ELSE 0 END) AS kpi_3_value,
+--     MAX(a.kpi_4) AS kpi_4_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_count ELSE 0 END) AS kpi_4_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_value ELSE 0 END) AS kpi_4_value,
+--     MAX(a.kpi_5) AS kpi_5_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_count ELSE 0 END) AS kpi_5_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_value ELSE 0 END) AS kpi_5_value,
+--     MAX(a.kpi_6) AS kpi_6_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_count ELSE 0 END) AS kpi_6_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_value ELSE 0 END) AS kpi_6_value,
+--     MAX(a.kpi_7) AS kpi_7_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_count ELSE 0 END) AS kpi_7_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_value ELSE 0 END) AS kpi_7_value,
+--     MAX(a.kpi_8) AS kpi_8_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_count ELSE 0 END) AS kpi_8_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_value ELSE 0 END) AS kpi_8_value,
+--     MAX(a.kpi_9) AS kpi_9_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_count ELSE 0 END) AS kpi_9_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_value ELSE 0 END) AS kpi_9_value,
+--     MAX(a.kpi_10) AS kpi_10_name,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_count ELSE 0 END) AS kpi_10_count,
+--     SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_value ELSE 0 END) AS kpi_10_value
 
---------------------------------------------------------------------
--- Bing/Microsoft Performance (using raw Fivetran table with SUM aggregation)
---------------------------------------------------------------------
-bing_dates AS (
-  SELECT
-    inputs.at_date,
-    ad_id,
-    MIN(date) AS earliest_date,
-    LEAST(MAX(date), inputs.at_date) AS latest_date
-  FROM `mavan-analytics.bingads.ad_performance_daily_report`
-  CROSS JOIN inputs
-  GROUP BY ad_id, inputs.at_date
-),
+--   FROM linkedin_base lb
+--   LEFT JOIN linkedin_conversions lc
+--     ON lb.date = lc.date
+--     AND lb.ad_id = lc.ad_id
+--   LEFT JOIN `mavan-analytics.nexus.accounts` a
+--     ON lb.account_id = a.id
 
--- Ad-level conversions with goal names (same pattern as Google's ads_conversions)
-bing_conversions AS (
-  SELECT
-    date AS date,
-    CONCAT('bingads_', CAST(ad_id AS STRING)) AS ad_id,
-    CONCAT('bingads_', CAST(ad_group_id AS STRING)) AS adset_id,
-    CONCAT('bingads_', CAST(campaign_id AS STRING)) AS campaign_id,
-    CONCAT('bingads_', CAST(account_id AS STRING)) AS account_id,
-    goal AS conversion_name,
-    SUM(conversions) AS conversion_count,
-    SUM(revenue) AS conversion_value
-  FROM `mavan-analytics.bingads.destination_url_performance_daily_report`
-  WHERE goal IS NOT NULL AND goal != ''
-  GROUP BY date, ad_id, ad_group_id, campaign_id, account_id, goal
-),
+--   GROUP BY lb.date, lb.earliest_date, lb.latest_date, lb.ad_id, lb.adset_id, lb.campaign_id, lb.account_id
+-- ),
 
-bing_base AS (
-  SELECT
-    br.date AS date,
-    bd.earliest_date,
-    bd.latest_date,
-    CONCAT('bingads_', CAST(br.ad_id AS STRING)) AS ad_id,
-    CONCAT('bingads_', CAST(br.ad_group_id AS STRING)) AS adset_id,
-    CONCAT('bingads_', CAST(br.campaign_id AS STRING)) AS campaign_id,
-    CONCAT('bingads_', CAST(br.account_id AS STRING)) AS account_id,
-    -- FIX: Use SUM() to aggregate dimension breakdown rows (device_os, device_type, network)
-    -- Raw table has multiple rows per ad per day that need to be summed
-    SUM(COALESCE(br.spend, 0)) AS spend,
-    SUM(COALESCE(br.impressions, 0)) AS impressions,
-    SUM(COALESCE(br.clicks, 0)) AS clicks
-  FROM `mavan-analytics.bingads.ad_performance_daily_report` br
-  CROSS JOIN inputs
-  INNER JOIN bing_dates bd
-    ON br.ad_id = bd.ad_id
-    AND bd.at_date = inputs.at_date
-  WHERE br.date = inputs.at_date
-  GROUP BY
-    br.date,
-    bd.earliest_date,
-    bd.latest_date,
-    br.ad_id,
-    br.ad_group_id,
-    br.campaign_id,
-    br.account_id
-),
+-- -- SELECT * from linkedin_performance
+-- -- ORDER BY ad_id;
 
-bing_performance AS (
-  SELECT
-    bb.date,
-    bb.earliest_date,
-    bb.latest_date,
-    bb.ad_id,
-    bb.adset_id,
-    bb.campaign_id,
-    bb.account_id,
-    MAX(bb.spend) AS spend,
-    MAX(bb.impressions) AS impressions,
-    MAX(bb.clicks) AS clicks,
+-- --------------------------------------------------------------------
+-- -- TikTok Performance (using ad_report_hourly - aggregated to daily)
+-- --------------------------------------------------------------------
+-- tiktok_dates AS (
+--   SELECT
+--     inputs.at_date,
+--     ad_id,
+--     MIN(DATE(stat_time_hour)) AS earliest_date,
+--     LEAST(MAX(DATE(stat_time_hour)), inputs.at_date) AS latest_date
+--   FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
+--   CROSS JOIN inputs
+--   GROUP BY ad_id, inputs.at_date
+-- ),
 
-    -- KPI mapping by goal name (same pattern as Google)
-    -- Conversions joined via ad_id (ad level - same as Google)
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_1 THEN bc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_1 THEN bc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_2 THEN bc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_2 THEN bc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_3 THEN bc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_3 THEN bc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_4 THEN bc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_4 THEN bc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_5 THEN bc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_5 THEN bc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_6 THEN bc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_6 THEN bc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_7 THEN bc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_7 THEN bc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_8 THEN bc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_8 THEN bc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_9 THEN bc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_9 THEN bc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_10 THEN bc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN bc.conversion_name = a.kpi_10 THEN bc.conversion_value ELSE 0 END) AS kpi_10_value
+-- -- Unpivot TikTok conversion columns to rows
+-- -- NOTE: TikTok stores conversions as inline columns (not rows like Facebook's basic_ad_actions table)
+-- tiktok_conversion_counts AS (
+--   SELECT date, ad_id, conversion_name, SUM(conversion_count) AS conversion_count
+--   FROM (
+--     SELECT
+--       DATE(stat_time_hour) AS date,
+--       CONCAT('tiktok_ads_', CAST(ad_id AS STRING)) AS ad_id,
+--       conversion_name,
+--       conversion_count
+--     FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
+--     UNPIVOT (conversion_count FOR conversion_name IN (
+--       on_web_subscribe, user_registration, purchase, checkout, initiate_checkout,
+--       complete_payment, view_content, add_to_wishlist, page_event_search, download_start,
+--       web_event_add_to_cart, app_event_add_to_cart, registration, sales_lead, conversion,
+--       on_web_add_to_wishlist
+--     ))
+--   )
+--   GROUP BY 1, 2, 3
+-- ),
 
-  FROM bing_base bb
-  LEFT JOIN bing_conversions bc
-    ON bb.date = bc.date
-    AND bb.ad_id = bc.ad_id  -- Join at AD level (same as Google)
-  LEFT JOIN `mavan-analytics.nexus.accounts` a
-    ON bb.account_id = a.id
-  GROUP BY bb.date, bb.earliest_date, bb.latest_date, bb.ad_id, bb.adset_id, bb.campaign_id, bb.account_id
-),
+-- tiktok_conversion_values AS (
+--   SELECT date, ad_id, conversion_name, SUM(conversion_value) AS conversion_value
+--   FROM (
+--     SELECT
+--       DATE(stat_time_hour) AS date,
+--       CONCAT('tiktok_ads_', CAST(ad_id AS STRING)) AS ad_id,
+--       conversion_name,
+--       conversion_value
+--     FROM `mavan-analytics.tiktok_ads.ad_report_hourly`
+--     UNPIVOT (conversion_value FOR conversion_name IN (
+--       total_on_web_subscribe_value AS 'on_web_subscribe',
+--       total_user_registration_value AS 'user_registration',
+--       total_purchase_value AS 'purchase',
+--       total_checkout_value AS 'checkout',
+--       total_initiate_checkout_value AS 'initiate_checkout',
+--       total_view_content_value AS 'view_content',
+--       total_add_to_wishlist_value AS 'add_to_wishlist',
+--       total_page_event_search_value AS 'page_event_search',
+--       total_download_start_value AS 'download_start',
+--       total_web_event_add_to_cart_value AS 'web_event_add_to_cart',
+--       total_app_event_add_to_cart_value AS 'app_event_add_to_cart',
+--       total_sales_lead_value AS 'sales_lead',
+--       total_on_web_add_to_wishlist_value AS 'on_web_add_to_wishlist'
+--     ))
+--   )
+--   GROUP BY 1, 2, 3
+-- ),
 
---------------------------------------------------------------------
--- All Performance
---------------------------------------------------------------------
+-- tiktok_conversions AS (
+--   SELECT
+--     tc.date,
+--     tc.ad_id,
+--     tc.conversion_name,
+--     tc.conversion_count,
+--     COALESCE(tv.conversion_value, 0.0) AS conversion_value
+--   FROM tiktok_conversion_counts tc
+--   LEFT JOIN tiktok_conversion_values tv
+--     ON tc.date = tv.date
+--     AND tc.ad_id = tv.ad_id
+--     AND tc.conversion_name = tv.conversion_name
+--   WHERE tc.conversion_count > 0 OR tv.conversion_value > 0
+-- ),
+
+-- tiktok_base AS (
+--   SELECT
+--     DATE(tr.stat_time_hour) AS date,
+--     td.earliest_date,
+--     td.latest_date,
+--     CONCAT('tiktok_ads_', CAST(tr.ad_id AS STRING)) AS ad_id,
+--     CONCAT('tiktok_ads_', CAST(ah.adgroup_id AS STRING)) AS adset_id,
+--     CONCAT('tiktok_ads_', CAST(ah.campaign_id AS STRING)) AS campaign_id,
+--     CONCAT('tiktok_ads_', CAST(ah.advertiser_id AS STRING)) AS account_id,
+--     SUM(tr.spend) AS spend,
+--     SUM(tr.impressions) AS impressions,
+--     SUM(tr.clicks) AS clicks
+--   FROM `mavan-analytics.tiktok_ads.ad_report_hourly` tr
+--   INNER JOIN (
+--     SELECT
+--       ad_id,
+--       adgroup_id,
+--       campaign_id,
+--       advertiser_id,
+--       ROW_NUMBER() OVER (PARTITION BY ad_id ORDER BY updated_at DESC) AS rn
+--     FROM `mavan-analytics.tiktok_ads.ad_history`
+--   ) ah
+--     ON tr.ad_id = ah.ad_id
+--     AND ah.rn = 1
+--   CROSS JOIN inputs
+--   INNER JOIN tiktok_dates td
+--     ON tr.ad_id = td.ad_id
+--     AND td.at_date = inputs.at_date
+--   WHERE DATE(tr.stat_time_hour) = inputs.at_date
+--   GROUP BY
+--     DATE(tr.stat_time_hour),
+--     td.earliest_date,
+--     td.latest_date,
+--     tr.ad_id,
+--     ah.adgroup_id,
+--     ah.campaign_id,
+--     ah.advertiser_id
+-- ),
+
+-- tiktok_performance AS (
+--   SELECT
+--     tb.date,
+--     tb.earliest_date,
+--     tb.latest_date,
+--     tb.ad_id,
+--     tb.adset_id,
+--     tb.campaign_id,
+--     tb.account_id,
+--     MAX(tb.spend) AS spend,
+--     MAX(tb.impressions) AS impressions,
+--     MAX(tb.clicks) AS clicks,
+
+--     -- KPI mapping from accounts (same pattern as FB/Google/LinkedIn)
+--     MAX(a.kpi_1) AS kpi_1_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_1 THEN tc.conversion_count ELSE 0 END) AS kpi_1_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_1 THEN tc.conversion_value ELSE 0 END) AS kpi_1_value,
+--     MAX(a.kpi_2) AS kpi_2_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_2 THEN tc.conversion_count ELSE 0 END) AS kpi_2_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_2 THEN tc.conversion_value ELSE 0 END) AS kpi_2_value,
+--     MAX(a.kpi_3) AS kpi_3_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_3 THEN tc.conversion_count ELSE 0 END) AS kpi_3_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_3 THEN tc.conversion_value ELSE 0 END) AS kpi_3_value,
+--     MAX(a.kpi_4) AS kpi_4_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_4 THEN tc.conversion_count ELSE 0 END) AS kpi_4_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_4 THEN tc.conversion_value ELSE 0 END) AS kpi_4_value,
+--     MAX(a.kpi_5) AS kpi_5_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_5 THEN tc.conversion_count ELSE 0 END) AS kpi_5_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_5 THEN tc.conversion_value ELSE 0 END) AS kpi_5_value,
+--     MAX(a.kpi_6) AS kpi_6_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_6 THEN tc.conversion_count ELSE 0 END) AS kpi_6_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_6 THEN tc.conversion_value ELSE 0 END) AS kpi_6_value,
+--     MAX(a.kpi_7) AS kpi_7_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_7 THEN tc.conversion_count ELSE 0 END) AS kpi_7_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_7 THEN tc.conversion_value ELSE 0 END) AS kpi_7_value,
+--     MAX(a.kpi_8) AS kpi_8_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_8 THEN tc.conversion_count ELSE 0 END) AS kpi_8_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_8 THEN tc.conversion_value ELSE 0 END) AS kpi_8_value,
+--     MAX(a.kpi_9) AS kpi_9_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_9 THEN tc.conversion_count ELSE 0 END) AS kpi_9_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_9 THEN tc.conversion_value ELSE 0 END) AS kpi_9_value,
+--     MAX(a.kpi_10) AS kpi_10_name,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_10 THEN tc.conversion_count ELSE 0 END) AS kpi_10_count,
+--     SUM(CASE WHEN tc.conversion_name = a.kpi_10 THEN tc.conversion_value ELSE 0 END) AS kpi_10_value
+
+--   FROM tiktok_base tb
+--   LEFT JOIN tiktok_conversions tc
+--     ON tb.date = tc.date
+--     AND tb.ad_id = tc.ad_id
+--   LEFT JOIN `mavan-analytics.nexus.accounts` a
+--     ON tb.account_id = a.id
+--   GROUP BY tb.date, tb.earliest_date, tb.latest_date, tb.ad_id, tb.adset_id, tb.campaign_id, tb.account_id
+-- ),
+
+-- --------------------------------------------------------------------
+-- -- Bing/Microsoft Performance (using raw Fivetran table with SUM aggregation)
+-- --------------------------------------------------------------------
+-- bing_dates AS (
+--   SELECT
+--     inputs.at_date,
+--     ad_id,
+--     MIN(date) AS earliest_date,
+--     LEAST(MAX(date), inputs.at_date) AS latest_date
+--   FROM `mavan-analytics.bingads.ad_performance_daily_report`
+--   CROSS JOIN inputs
+--   GROUP BY ad_id, inputs.at_date
+-- ),
+
+-- -- Ad-level conversions with goal names (same pattern as Google's ads_conversions)
+-- bing_conversions AS (
+--   SELECT
+--     date AS date,
+--     CONCAT('bingads_', CAST(ad_id AS STRING)) AS ad_id,
+--     CONCAT('bingads_', CAST(ad_group_id AS STRING)) AS adset_id,
+--     CONCAT('bingads_', CAST(campaign_id AS STRING)) AS campaign_id,
+--     CONCAT('bingads_', CAST(account_id AS STRING)) AS account_id,
+--     goal AS conversion_name,
+--     SUM(conversions) AS conversion_count,
+--     SUM(revenue) AS conversion_value
+--   FROM `mavan-analytics.bingads.destination_url_performance_daily_report`
+--   WHERE goal IS NOT NULL AND goal != ''
+--   GROUP BY date, ad_id, ad_group_id, campaign_id, account_id, goal
+-- ),
+
+-- bing_base AS (
+--   SELECT
+--     br.date AS date,
+--     bd.earliest_date,
+--     bd.latest_date,
+--     CONCAT('bingads_', CAST(br.ad_id AS STRING)) AS ad_id,
+--     CONCAT('bingads_', CAST(br.ad_group_id AS STRING)) AS adset_id,
+--     CONCAT('bingads_', CAST(br.campaign_id AS STRING)) AS campaign_id,
+--     CONCAT('bingads_', CAST(br.account_id AS STRING)) AS account_id,
+--     -- FIX: Use SUM() to aggregate dimension breakdown rows (device_os, device_type, network)
+--     -- Raw table has multiple rows per ad per day that need to be summed
+--     SUM(COALESCE(br.spend, 0)) AS spend,
+--     SUM(COALESCE(br.impressions, 0)) AS impressions,
+--     SUM(COALESCE(br.clicks, 0)) AS clicks
+--   FROM `mavan-analytics.bingads.ad_performance_daily_report` br
+--   CROSS JOIN inputs
+--   INNER JOIN bing_dates bd
+--     ON br.ad_id = bd.ad_id
+--     AND bd.at_date = inputs.at_date
+--   WHERE br.date = inputs.at_date
+--   GROUP BY
+--     br.date,
+--     bd.earliest_date,
+--     bd.latest_date,
+--     br.ad_id,
+--     br.ad_group_id,
+--     br.campaign_id,
+--     br.account_id
+-- ),
+
+-- bing_performance AS (
+--   SELECT
+--     bb.date,
+--     bb.earliest_date,
+--     bb.latest_date,
+--     bb.ad_id,
+--     bb.adset_id,
+--     bb.campaign_id,
+--     bb.account_id,
+--     MAX(bb.spend) AS spend,
+--     MAX(bb.impressions) AS impressions,
+--     MAX(bb.clicks) AS clicks,
+
+--     -- KPI mapping by goal name (same pattern as Google)
+--     -- Conversions joined via ad_id (ad level - same as Google)
+--     MAX(a.kpi_1) AS kpi_1_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_1 THEN bc.conversion_count ELSE 0 END) AS kpi_1_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_1 THEN bc.conversion_value ELSE 0 END) AS kpi_1_value,
+--     MAX(a.kpi_2) AS kpi_2_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_2 THEN bc.conversion_count ELSE 0 END) AS kpi_2_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_2 THEN bc.conversion_value ELSE 0 END) AS kpi_2_value,
+--     MAX(a.kpi_3) AS kpi_3_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_3 THEN bc.conversion_count ELSE 0 END) AS kpi_3_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_3 THEN bc.conversion_value ELSE 0 END) AS kpi_3_value,
+--     MAX(a.kpi_4) AS kpi_4_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_4 THEN bc.conversion_count ELSE 0 END) AS kpi_4_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_4 THEN bc.conversion_value ELSE 0 END) AS kpi_4_value,
+--     MAX(a.kpi_5) AS kpi_5_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_5 THEN bc.conversion_count ELSE 0 END) AS kpi_5_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_5 THEN bc.conversion_value ELSE 0 END) AS kpi_5_value,
+--     MAX(a.kpi_6) AS kpi_6_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_6 THEN bc.conversion_count ELSE 0 END) AS kpi_6_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_6 THEN bc.conversion_value ELSE 0 END) AS kpi_6_value,
+--     MAX(a.kpi_7) AS kpi_7_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_7 THEN bc.conversion_count ELSE 0 END) AS kpi_7_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_7 THEN bc.conversion_value ELSE 0 END) AS kpi_7_value,
+--     MAX(a.kpi_8) AS kpi_8_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_8 THEN bc.conversion_count ELSE 0 END) AS kpi_8_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_8 THEN bc.conversion_value ELSE 0 END) AS kpi_8_value,
+--     MAX(a.kpi_9) AS kpi_9_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_9 THEN bc.conversion_count ELSE 0 END) AS kpi_9_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_9 THEN bc.conversion_value ELSE 0 END) AS kpi_9_value,
+--     MAX(a.kpi_10) AS kpi_10_name,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_10 THEN bc.conversion_count ELSE 0 END) AS kpi_10_count,
+--     SUM(CASE WHEN bc.conversion_name = a.kpi_10 THEN bc.conversion_value ELSE 0 END) AS kpi_10_value
+
+--   FROM bing_base bb
+--   LEFT JOIN bing_conversions bc
+--     ON bb.date = bc.date
+--     AND bb.ad_id = bc.ad_id  -- Join at AD level (same as Google)
+--   LEFT JOIN `mavan-analytics.nexus.accounts` a
+--     ON bb.account_id = a.id
+--   GROUP BY bb.date, bb.earliest_date, bb.latest_date, bb.ad_id, bb.adset_id, bb.campaign_id, bb.account_id
+-- ),
+
+-- --------------------------------------------------------------------
+-- -- All Performance
+-- --------------------------------------------------------------------
 all_performance AS (
   SELECT * FROM facebook_performance
-  UNION ALL
-  SELECT * FROM google_performance
-  UNION ALL
-  SELECT * FROM google_pmax_performance
-  UNION ALL
-  SELECT * FROM linkedin_performance
-  UNION ALL
-  SELECT * FROM tiktok_performance
-  UNION ALL
-  SELECT * FROM bing_performance
+--   UNION ALL
+--   SELECT * FROM google_performance
+--   UNION ALL
+--   SELECT * FROM google_pmax_performance
+--   UNION ALL
+--   SELECT * FROM linkedin_performance
+--   UNION ALL
+--   SELECT * FROM tiktok_performance
+--   UNION ALL
+--   SELECT * FROM bing_performance
 ),
 
 --------------------------------------------------------------------
@@ -1036,11 +1036,11 @@ joined_data AS (
     p.kpi_10_value
 
   FROM all_performance_with_fatigue p
-  LEFT JOIN `mavan-analytics.nexus.ads` ad
+  LEFT JOIN {{ ref('ads') }} ad
     ON p.ad_id = ad.id
-  LEFT JOIN `mavan-analytics.nexus.adsets` adset
+  LEFT JOIN {{ ref('adsets') }} adset
     ON p.adset_id = adset.id
-  LEFT JOIN `mavan-analytics.nexus.campaigns` c
+  LEFT JOIN {{ ref('campaigns') }} c
     ON p.campaign_id = c.id
 ),
 
