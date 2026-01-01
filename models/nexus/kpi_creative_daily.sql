@@ -100,6 +100,8 @@ facebook_base AS (
     ON fb.ad_id = fd.ad_id
     AND fd.at_date = inputs.at_date
   WHERE date = inputs.at_date
+    and account_id not in (445615612482628,1087533845894896,795925124342132,592675489724278)
+
 ),
 
 facebook_performance AS (

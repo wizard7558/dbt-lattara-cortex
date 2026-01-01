@@ -134,5 +134,5 @@ SELECT aa.id,
     kpi_10
 FROM all_accounts aa
 left join `cortex.products` prod
-on aa.name = prod.name
+on aa.name = prod.account
 and aa.ad_network_id = prod.ad_network_id

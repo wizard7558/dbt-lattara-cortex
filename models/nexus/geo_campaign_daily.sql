@@ -1,15 +1,4 @@
-{{
-  config(
-    materialized='incremental',
-    incremental_strategy='insert_overwrite',
-    partition_by={
-      "field": "date",
-      "data_type": "date",
-      "granularity": "day"
-    },
-    schema='nexus'
-  )
-}}
+
 
 -- Unified campaign-level geographic performance across all ad networks
 -- Phase 1: TikTok + Bing (ready)
@@ -211,8 +200,3 @@ FROM all_geo g
 LEFT JOIN {{ ref('campaigns') }} c
     ON g.campaign_id = c.id
 WHERE g.country_code IS NOT NULL
-
-{% if is_incremental() %}
-  -- 7 days lookback to catch retroactive API corrections from ad networks
-  AND g.date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-{% endif %}
