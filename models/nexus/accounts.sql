@@ -14,14 +14,14 @@ WITH facebook_latest AS (
   FROM `facebook_ads.account_history`
 ),
 
--- google_latest AS (
---   SELECT
---     CAST(id AS STRING) as id,
---     CAST(descriptive_name AS STRING) as name,
---     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
---   FROM {{ source('google_ads_v2', 'account_history') }}
---   WHERE _fivetran_active = TRUE
--- ),
+google_latest AS (
+  SELECT
+    CAST(id AS STRING) as id,
+    CAST(descriptive_name AS STRING) as name,
+    ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
+  FROM `google_ads_v2.account_history`
+  WHERE _fivetran_active = TRUE
+),
 
 -- linkedin_latest AS (
 --   SELECT
@@ -59,26 +59,26 @@ all_accounts AS (
   FROM facebook_latest
   WHERE rn = 1
 
---   UNION ALL
+  UNION ALL
 
---   SELECT
---     CONCAT('google_ads_', id) AS id,
---     name AS name,
---     'google_ads' AS ad_network_id,
---     CAST(NULL AS STRING) AS product_id,
---     CAST(NULL AS STRING) AS organization_id,
---     CAST(NULL AS STRING) AS kpi_1,
---     CAST(NULL AS STRING) AS kpi_2,
---     CAST(NULL AS STRING) AS kpi_3,
---     CAST(NULL AS STRING) AS kpi_4,
---     CAST(NULL AS STRING) AS kpi_5,
---     CAST(NULL AS STRING) AS kpi_6,
---     CAST(NULL AS STRING) AS kpi_7,
---     CAST(NULL AS STRING) AS kpi_8,
---     CAST(NULL AS STRING) AS kpi_9,
---     CAST(NULL AS STRING) AS kpi_10
---   FROM google_latest
---   WHERE rn = 1
+  SELECT
+    CONCAT('google_ads_', id) AS id,
+    name AS name,
+    'google_ads' AS ad_network_id,
+    CAST(NULL AS STRING) AS product_id,
+    CAST(NULL AS STRING) AS organization_id,
+    CAST(NULL AS STRING) AS kpi_1,
+    CAST(NULL AS STRING) AS kpi_2,
+    CAST(NULL AS STRING) AS kpi_3,
+    CAST(NULL AS STRING) AS kpi_4,
+    CAST(NULL AS STRING) AS kpi_5,
+    CAST(NULL AS STRING) AS kpi_6,
+    CAST(NULL AS STRING) AS kpi_7,
+    CAST(NULL AS STRING) AS kpi_8,
+    CAST(NULL AS STRING) AS kpi_9,
+    CAST(NULL AS STRING) AS kpi_10
+  FROM google_latest
+  WHERE rn = 1
 
 --   UNION ALL
 

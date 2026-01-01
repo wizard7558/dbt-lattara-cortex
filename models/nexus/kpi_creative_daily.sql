@@ -32,7 +32,7 @@ facebook_dates AS (
     ad_id,
     MIN(CAST(date AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date AS DATE)), inputs.at_date) AS latest_date
-  FROM `facebook_ads_v2.basic_ad`
+  FROM `facebook_ads.basic_ad`
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
 ),
@@ -53,7 +53,7 @@ facebook_conversion_values AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_value
-  FROM `facebook_ads.basic_ad_action_values`
+  FROM `facebook_ads.ads_insights_action_values`
   GROUP BY date, ad_id, action_type
 ),
 
@@ -84,7 +84,7 @@ facebook_base AS (
     COALESCE(fb.spend, 0) as spend,
     COALESCE(fb.impressions, 0) as impressions,
     COALESCE(fb.inline_link_clicks, 0) AS clicks,
-  FROM `mavan-analytics.facebook_ads_v2.basic_ad` fb
+  FROM `facebook_ads.basic_ad` fb
   CROSS JOIN inputs
   INNER JOIN (
     SELECT 
@@ -158,219 +158,219 @@ facebook_performance AS (
 -- SELECT * from facebook_performance
 -- ORDER BY ad_id;
 
--- --------------------------------------------------------------------
--- -- Google Performance
--- --------------------------------------------------------------------
--- google_dates AS (
---   SELECT
---     inputs.at_date,
---     ad_id,
---     MIN(CAST(date_day AS DATE)) AS earliest_date,
---     LEAST(MAX(CAST(date_day AS DATE)), inputs.at_date) AS latest_date
---   FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report`
---   CROSS JOIN inputs
---   GROUP BY ad_id, inputs.at_date
--- ),
+--------------------------------------------------------------------
+-- Google Performance
+--------------------------------------------------------------------
+google_dates AS (
+  SELECT
+    inputs.at_date,
+    ad_id,
+    MIN(CAST(date_day AS DATE)) AS earliest_date,
+    LEAST(MAX(CAST(date_day AS DATE)), inputs.at_date) AS latest_date
+  FROM `google_ads_v2_google_ads.google_ads__ad_report`
+  CROSS JOIN inputs
+  GROUP BY ad_id, inputs.at_date
+),
 
--- google_conversions AS (
---   SELECT
---     CAST(date AS DATE) AS date,
---     CONCAT('google_ads_', CAST(ad_id AS STRING)) AS ad_id,
---     conversion_action_name AS conversion_name,
---     SUM(all_conversions) AS conversion_count,
---     SUM(all_conversions_value) AS conversion_value
---   FROM `mavan-analytics.google_ads_v2.ads_conversions`
---   WHERE conversion_action_name IS NOT NULL
---   GROUP BY date, ad_id, conversion_action_name
--- ),
+google_conversions AS (
+  SELECT
+    CAST(date AS DATE) AS date,
+    CONCAT('google_ads_', CAST(ad_id AS STRING)) AS ad_id,
+    conversion_action_name AS conversion_name,
+    SUM(all_conversions) AS conversion_count,
+    SUM(all_conversions_value) AS conversion_value
+  FROM `google_ads_v2.ads_conversions`
+  WHERE conversion_action_name IS NOT NULL
+  GROUP BY date, ad_id, conversion_action_name
+),
 
--- google_base AS (
---   SELECT
---     CAST(gr.date_day AS DATE) AS date,
---     gd.earliest_date,
---     gd.latest_date,
---     CONCAT('google_ads_', CAST(gr.ad_id AS STRING)) AS ad_id,
---     CONCAT('google_ads_', gr.ad_group_id) AS adset_id,
---     CONCAT('google_ads_', CAST(gr.campaign_id AS STRING)) AS campaign_id,
---     CONCAT('google_ads_', CAST(gr.account_id AS STRING)) AS account_id,
---     COALESCE(gr.spend, 0) AS SPEND,
---     COALESCE(gr.impressions, 0) AS impressions,
---     COALESCE(gr.clicks, 0) AS clicks,
---   FROM `mavan-analytics.google_ads_v2_google_ads.google_ads__ad_report` gr
---   CROSS JOIN inputs
---   INNER JOIN google_dates gd
---     ON gr.ad_id = gd.ad_id
---     AND gd.at_date = inputs.at_date
---   WHERE gr.date_day = inputs.at_date
--- ),
+google_base AS (
+  SELECT
+    CAST(gr.date_day AS DATE) AS date,
+    gd.earliest_date,
+    gd.latest_date,
+    CONCAT('google_ads_', CAST(gr.ad_id AS STRING)) AS ad_id,
+    CONCAT('google_ads_', gr.ad_group_id) AS adset_id,
+    CONCAT('google_ads_', CAST(gr.campaign_id AS STRING)) AS campaign_id,
+    CONCAT('google_ads_', CAST(gr.account_id AS STRING)) AS account_id,
+    COALESCE(gr.spend, 0) AS SPEND,
+    COALESCE(gr.impressions, 0) AS impressions,
+    COALESCE(gr.clicks, 0) AS clicks,
+  FROM `google_ads_v2_google_ads.google_ads__ad_report` gr
+  CROSS JOIN inputs
+  INNER JOIN google_dates gd
+    ON gr.ad_id = gd.ad_id
+    AND gd.at_date = inputs.at_date
+  WHERE gr.date_day = inputs.at_date
+),
 
--- google_performance AS (
---   SELECT
---     gb.date,
---     gb.earliest_date,
---     gb.latest_date,
---     gb.ad_id,
---     gb.adset_id,
---     gb.campaign_id,
---     gb.account_id AS account_id,
---     MAX(gb.spend) AS spend,
---     MAX(gb.impressions) as impressions,
---     MAX(gb.clicks) as clicks,
+google_performance AS (
+  SELECT
+    gb.date,
+    gb.earliest_date,
+    gb.latest_date,
+    gb.ad_id,
+    gb.adset_id,
+    gb.campaign_id,
+    gb.account_id AS account_id,
+    MAX(gb.spend) AS spend,
+    MAX(gb.impressions) as impressions,
+    MAX(gb.clicks) as clicks,
 
---     MAX(a.kpi_1) AS kpi_1_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_count ELSE 0 END) AS kpi_1_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_value ELSE 0 END) AS kpi_1_value,
---     MAX(a.kpi_2) AS kpi_2_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_count ELSE 0 END) AS kpi_2_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_value ELSE 0 END) AS kpi_2_value,
---     MAX(a.kpi_3) AS kpi_3_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_count ELSE 0 END) AS kpi_3_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_value ELSE 0 END) AS kpi_3_value,
---     MAX(a.kpi_4) AS kpi_4_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_count ELSE 0 END) AS kpi_4_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_value ELSE 0 END) AS kpi_4_value,
---     MAX(a.kpi_5) AS kpi_5_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_count ELSE 0 END) AS kpi_5_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_value ELSE 0 END) AS kpi_5_value,
---     MAX(a.kpi_6) AS kpi_6_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_count ELSE 0 END) AS kpi_6_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_value ELSE 0 END) AS kpi_6_value,
---     MAX(a.kpi_7) AS kpi_7_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_count ELSE 0 END) AS kpi_7_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_value ELSE 0 END) AS kpi_7_value,
---     MAX(a.kpi_8) AS kpi_8_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_count ELSE 0 END) AS kpi_8_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_value ELSE 0 END) AS kpi_8_value,
---     MAX(a.kpi_9) AS kpi_9_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_count ELSE 0 END) AS kpi_9_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_value ELSE 0 END) AS kpi_9_value,
---     MAX(a.kpi_10) AS kpi_10_name,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_count ELSE 0 END) AS kpi_10_count,
---     SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_value ELSE 0 END) AS kpi_10_value
+    MAX(a.kpi_1) AS kpi_1_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_count ELSE 0 END) AS kpi_1_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_1 THEN gc.conversion_value ELSE 0 END) AS kpi_1_value,
+    MAX(a.kpi_2) AS kpi_2_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_count ELSE 0 END) AS kpi_2_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_2 THEN gc.conversion_value ELSE 0 END) AS kpi_2_value,
+    MAX(a.kpi_3) AS kpi_3_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_count ELSE 0 END) AS kpi_3_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_3 THEN gc.conversion_value ELSE 0 END) AS kpi_3_value,
+    MAX(a.kpi_4) AS kpi_4_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_count ELSE 0 END) AS kpi_4_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_4 THEN gc.conversion_value ELSE 0 END) AS kpi_4_value,
+    MAX(a.kpi_5) AS kpi_5_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_count ELSE 0 END) AS kpi_5_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_5 THEN gc.conversion_value ELSE 0 END) AS kpi_5_value,
+    MAX(a.kpi_6) AS kpi_6_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_count ELSE 0 END) AS kpi_6_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_6 THEN gc.conversion_value ELSE 0 END) AS kpi_6_value,
+    MAX(a.kpi_7) AS kpi_7_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_count ELSE 0 END) AS kpi_7_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_7 THEN gc.conversion_value ELSE 0 END) AS kpi_7_value,
+    MAX(a.kpi_8) AS kpi_8_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_count ELSE 0 END) AS kpi_8_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_8 THEN gc.conversion_value ELSE 0 END) AS kpi_8_value,
+    MAX(a.kpi_9) AS kpi_9_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_count ELSE 0 END) AS kpi_9_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_9 THEN gc.conversion_value ELSE 0 END) AS kpi_9_value,
+    MAX(a.kpi_10) AS kpi_10_name,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_count ELSE 0 END) AS kpi_10_count,
+    SUM(CASE WHEN gc.conversion_name = a.kpi_10 THEN gc.conversion_value ELSE 0 END) AS kpi_10_value
 
 
 
---   FROM google_base gb
---   LEFT JOIN google_conversions gc
---     ON gb.date = gc.date
---     AND gb.ad_id = gc.ad_id
---   LEFT JOIN `mavan-analytics.nexus.accounts` a
---     ON gb.account_id = a.id
---   GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
--- ),
+  FROM google_base gb
+  LEFT JOIN google_conversions gc
+    ON gb.date = gc.date
+    AND gb.ad_id = gc.ad_id
+  LEFT JOIN {{ ref('accounts') }} a
+    ON gb.account_id = a.id
+  GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
+),
 
--- --------------------------------------------------------------------
--- -- Google Performance Max (PMax) - Campaign-level data
--- -- PMax campaigns don't have traditional ads/adsets, they use Asset Groups
--- -- We source from campaign_stats instead of google_ads__ad_report
--- --------------------------------------------------------------------
--- google_pmax_campaign_ids AS (
---   -- Get all Performance Max campaign IDs
---   SELECT DISTINCT id as campaign_id
---   FROM `mavan-analytics.google_ads_v2.campaign_history`
---   WHERE advertising_channel_type = 'PERFORMANCE_MAX'
--- ),
+--------------------------------------------------------------------
+-- Google Performance Max (PMax) - Campaign-level data
+-- PMax campaigns don't have traditional ads/adsets, they use Asset Groups
+-- We source from campaign_stats instead of google_ads__ad_report
+--------------------------------------------------------------------
+google_pmax_campaign_ids AS (
+  -- Get all Performance Max campaign IDs
+  SELECT DISTINCT id as campaign_id
+  FROM `google_ads_v2.campaign_history`
+  WHERE advertising_channel_type = 'PERFORMANCE_MAX'
+),
 
--- google_pmax_dates AS (
---   SELECT
---     inputs.at_date,
---     cs.id as campaign_id,
---     MIN(cs.date) AS earliest_date,
---     LEAST(MAX(cs.date), inputs.at_date) AS latest_date
---   FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
---   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
---   CROSS JOIN inputs
---   GROUP BY cs.id, inputs.at_date
--- ),
+google_pmax_dates AS (
+  SELECT
+    inputs.at_date,
+    cs.id as campaign_id,
+    MIN(cs.date) AS earliest_date,
+    LEAST(MAX(cs.date), inputs.at_date) AS latest_date
+  FROM `google_ads_v2.campaign_stats` cs
+  INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
+  CROSS JOIN inputs
+  GROUP BY cs.id, inputs.at_date
+),
 
--- google_pmax_conversions AS (
---   SELECT
---     cc.date,
---     CONCAT('google_ads_', CAST(cc.id AS STRING), '_pmax') AS ad_id,
---     cc.conversion_action_name AS conversion_name,
---     SUM(cc.all_conversions) AS conversion_count,
---     SUM(cc.all_conversions_value) AS conversion_value
---   FROM `mavan-analytics.google_ads_v2.campaign_conversions` cc
---   INNER JOIN google_pmax_campaign_ids pmax ON cc.id = pmax.campaign_id
---   WHERE cc.conversion_action_name IS NOT NULL
---   GROUP BY cc.date, cc.id, cc.conversion_action_name
--- ),
+google_pmax_conversions AS (
+  SELECT
+    cc.date,
+    CONCAT('google_ads_', CAST(cc.id AS STRING), '_pmax') AS ad_id,
+    cc.conversion_action_name AS conversion_name,
+    SUM(cc.all_conversions) AS conversion_count,
+    SUM(cc.all_conversions_value) AS conversion_value
+  FROM `google_ads_v2.campaign_conversions` cc
+  INNER JOIN google_pmax_campaign_ids pmax ON cc.id = pmax.campaign_id
+  WHERE cc.conversion_action_name IS NOT NULL
+  GROUP BY cc.date, cc.id, cc.conversion_action_name
+),
 
--- google_pmax_base AS (
---   SELECT
---     cs.date,
---     pd.earliest_date,
---     pd.latest_date,
---     -- For PMax, ad_id and adset_id are synthetic (campaign-level)
---     CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS ad_id,
---     CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS adset_id,
---     CONCAT('google_ads_', CAST(cs.id AS STRING)) AS campaign_id,
---     CONCAT('google_ads_', CAST(cs.customer_id AS STRING)) AS account_id,
---     SUM(COALESCE(cs.cost_micros, 0)) / 1000000.0 AS spend,
---     SUM(COALESCE(cs.impressions, 0)) AS impressions,
---     SUM(COALESCE(cs.clicks, 0)) AS clicks
---   FROM `mavan-analytics.google_ads_v2.campaign_stats` cs
---   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
---   CROSS JOIN inputs
---   INNER JOIN google_pmax_dates pd
---     ON cs.id = pd.campaign_id
---     AND pd.at_date = inputs.at_date
---   WHERE cs.date = inputs.at_date
---   GROUP BY cs.date, pd.earliest_date, pd.latest_date, cs.id, cs.customer_id
--- ),
+google_pmax_base AS (
+  SELECT
+    cs.date,
+    pd.earliest_date,
+    pd.latest_date,
+    -- For PMax, ad_id and adset_id are synthetic (campaign-level)
+    CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS ad_id,
+    CONCAT('google_ads_', CAST(cs.id AS STRING), '_pmax') AS adset_id,
+    CONCAT('google_ads_', CAST(cs.id AS STRING)) AS campaign_id,
+    CONCAT('google_ads_', CAST(cs.customer_id AS STRING)) AS account_id,
+    SUM(COALESCE(cs.cost_micros, 0)) / 1000000.0 AS spend,
+    SUM(COALESCE(cs.impressions, 0)) AS impressions,
+    SUM(COALESCE(cs.clicks, 0)) AS clicks
+  FROM `google_ads_v2.campaign_stats` cs
+  INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
+  CROSS JOIN inputs
+  INNER JOIN google_pmax_dates pd
+    ON cs.id = pd.campaign_id
+    AND pd.at_date = inputs.at_date
+  WHERE cs.date = inputs.at_date
+  GROUP BY cs.date, pd.earliest_date, pd.latest_date, cs.id, cs.customer_id
+),
 
--- google_pmax_performance AS (
---   SELECT
---     pb.date,
---     pb.earliest_date,
---     pb.latest_date,
---     pb.ad_id,
---     pb.adset_id,
---     pb.campaign_id,
---     pb.account_id,
---     MAX(pb.spend) AS spend,
---     MAX(pb.impressions) AS impressions,
---     MAX(pb.clicks) AS clicks,
+google_pmax_performance AS (
+  SELECT
+    pb.date,
+    pb.earliest_date,
+    pb.latest_date,
+    pb.ad_id,
+    pb.adset_id,
+    pb.campaign_id,
+    pb.account_id,
+    MAX(pb.spend) AS spend,
+    MAX(pb.impressions) AS impressions,
+    MAX(pb.clicks) AS clicks,
 
---     MAX(a.kpi_1) AS kpi_1_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_count ELSE 0 END) AS kpi_1_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_value ELSE 0 END) AS kpi_1_value,
---     MAX(a.kpi_2) AS kpi_2_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_count ELSE 0 END) AS kpi_2_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_value ELSE 0 END) AS kpi_2_value,
---     MAX(a.kpi_3) AS kpi_3_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_count ELSE 0 END) AS kpi_3_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_value ELSE 0 END) AS kpi_3_value,
---     MAX(a.kpi_4) AS kpi_4_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_count ELSE 0 END) AS kpi_4_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_value ELSE 0 END) AS kpi_4_value,
---     MAX(a.kpi_5) AS kpi_5_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_count ELSE 0 END) AS kpi_5_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_value ELSE 0 END) AS kpi_5_value,
---     MAX(a.kpi_6) AS kpi_6_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_count ELSE 0 END) AS kpi_6_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_value ELSE 0 END) AS kpi_6_value,
---     MAX(a.kpi_7) AS kpi_7_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_count ELSE 0 END) AS kpi_7_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_value ELSE 0 END) AS kpi_7_value,
---     MAX(a.kpi_8) AS kpi_8_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_count ELSE 0 END) AS kpi_8_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_value ELSE 0 END) AS kpi_8_value,
---     MAX(a.kpi_9) AS kpi_9_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_count ELSE 0 END) AS kpi_9_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_value ELSE 0 END) AS kpi_9_value,
---     MAX(a.kpi_10) AS kpi_10_name,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_count ELSE 0 END) AS kpi_10_count,
---     SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_value ELSE 0 END) AS kpi_10_value
+    MAX(a.kpi_1) AS kpi_1_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_count ELSE 0 END) AS kpi_1_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_1 THEN pc.conversion_value ELSE 0 END) AS kpi_1_value,
+    MAX(a.kpi_2) AS kpi_2_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_count ELSE 0 END) AS kpi_2_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_2 THEN pc.conversion_value ELSE 0 END) AS kpi_2_value,
+    MAX(a.kpi_3) AS kpi_3_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_count ELSE 0 END) AS kpi_3_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_3 THEN pc.conversion_value ELSE 0 END) AS kpi_3_value,
+    MAX(a.kpi_4) AS kpi_4_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_count ELSE 0 END) AS kpi_4_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_4 THEN pc.conversion_value ELSE 0 END) AS kpi_4_value,
+    MAX(a.kpi_5) AS kpi_5_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_count ELSE 0 END) AS kpi_5_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_5 THEN pc.conversion_value ELSE 0 END) AS kpi_5_value,
+    MAX(a.kpi_6) AS kpi_6_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_count ELSE 0 END) AS kpi_6_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_6 THEN pc.conversion_value ELSE 0 END) AS kpi_6_value,
+    MAX(a.kpi_7) AS kpi_7_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_count ELSE 0 END) AS kpi_7_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_7 THEN pc.conversion_value ELSE 0 END) AS kpi_7_value,
+    MAX(a.kpi_8) AS kpi_8_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_count ELSE 0 END) AS kpi_8_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_8 THEN pc.conversion_value ELSE 0 END) AS kpi_8_value,
+    MAX(a.kpi_9) AS kpi_9_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_count ELSE 0 END) AS kpi_9_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_9 THEN pc.conversion_value ELSE 0 END) AS kpi_9_value,
+    MAX(a.kpi_10) AS kpi_10_name,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_count ELSE 0 END) AS kpi_10_count,
+    SUM(CASE WHEN pc.conversion_name = a.kpi_10 THEN pc.conversion_value ELSE 0 END) AS kpi_10_value
 
---   FROM google_pmax_base pb
---   LEFT JOIN google_pmax_conversions pc
---     ON pb.date = pc.date
---     AND pb.ad_id = pc.ad_id
---   LEFT JOIN `mavan-analytics.nexus.accounts` a
---     ON pb.account_id = a.id
---   GROUP BY pb.date, pb.earliest_date, pb.latest_date, pb.ad_id, pb.adset_id, pb.campaign_id, pb.account_id
--- ),
+  FROM google_pmax_base pb
+  LEFT JOIN google_pmax_conversions pc
+    ON pb.date = pc.date
+    AND pb.ad_id = pc.ad_id
+  LEFT JOIN {{ ref('accounts') }} a
+    ON pb.account_id = a.id
+  GROUP BY pb.date, pb.earliest_date, pb.latest_date, pb.ad_id, pb.adset_id, pb.campaign_id, pb.account_id
+),
 
 -- -- SELECT * from google_performance
 -- -- ORDER BY ad_id;

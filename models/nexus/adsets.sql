@@ -2,7 +2,7 @@
   config(
     materialized='incremental',
     unique_key='id',
-    schema='nexus'
+    schema='cortex'
   )
 }}
 
@@ -24,24 +24,24 @@ facebook_adsets AS (
   WHERE rn = 1
 ),
 
--- google_adgroup_latest AS (
---   SELECT
---     id,
---     name,
---     campaign_id,
---     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
---   FROM `mavan-analytics.google_ads_v2.ad_group_history`
---   WHERE _fivetran_active = TRUE
--- ),
+google_adgroup_latest AS (
+  SELECT
+    id,
+    name,
+    campaign_id,
+    ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
+  FROM `google_ads_v2.ad_group_history`
+  WHERE _fivetran_active = TRUE
+),
 
--- google_adsets AS (
---   SELECT
---     id,
---     name,
---     campaign_id
---   FROM google_adgroup_latest
---   WHERE rn = 1
--- ),
+google_adsets AS (
+  SELECT
+    id,
+    name,
+    campaign_id
+  FROM google_adgroup_latest
+  WHERE rn = 1
+),
 
 -- linkedin_campaign_latest AS (
 --   SELECT
@@ -97,25 +97,25 @@ facebook_adsets AS (
 --   WHERE rn = 1
 -- ),
 
--- -- Google Performance Max synthetic adsets (PMax has no adset-level data, only campaign-level)
--- google_pmax_campaigns AS (
---   SELECT
---     c.id,
---     c.name,
---     c.customer_id AS account_id
---   FROM `mavan-analytics.google_ads_v2.campaign_history` c
---   WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
---     AND c._fivetran_active = TRUE
---   QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1
--- ),
+-- Google Performance Max synthetic adsets (PMax has no adset-level data, only campaign-level)
+google_pmax_campaigns AS (
+  SELECT
+    c.id,
+    c.name,
+    c.customer_id AS account_id
+  FROM `google_ads_v2.campaign_history` c
+  WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
+    AND c._fivetran_active = TRUE
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1
+),
 
--- google_pmax_adsets AS (
---   SELECT
---     id,
---     name,
---     id AS campaign_id  -- For PMax, adset = campaign (synthetic)
---   FROM google_pmax_campaigns
--- ),
+google_pmax_adsets AS (
+  SELECT
+    id,
+    name,
+    id AS campaign_id  -- For PMax, adset = campaign (synthetic)
+  FROM google_pmax_campaigns
+),
 
 all_adsets AS (
   SELECT

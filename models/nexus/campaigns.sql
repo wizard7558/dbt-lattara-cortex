@@ -2,7 +2,7 @@
   config(
     materialized='incremental',
     unique_key='id',
-    schema='nexus'
+    schema='cortex'
   )
 }}
 
@@ -34,38 +34,38 @@ facebook_campaigns AS (
     AND a.rn = 1
   WHERE c.rn = 1
 ),
--- ),
 
--- google_campaign_latest AS (
---   SELECT
---     id,
---     name,
---     customer_id AS account_id,
---     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
---   FROM {{ source('google_ads_v2', 'campaign_history') }}
---   WHERE _fivetran_active = TRUE
--- ),
 
--- google_account_latest AS (
---   SELECT
---     id,
---     descriptive_name,
---     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
---   FROM {{ source('google_ads_v2', 'account_history') }}
---   WHERE _fivetran_active = TRUE
--- ),
+google_campaign_latest AS (
+  SELECT
+    id,
+    name,
+    customer_id AS account_id,
+    ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
+  FROM `google_ads_v2.campaign_history`
+  WHERE _fivetran_active = TRUE
+),
 
--- google_campaigns AS (
---   SELECT
---     c.id,
---     c.name,
---     a.id AS account_id
---   FROM google_campaign_latest c
---   INNER JOIN google_account_latest a
---     ON c.account_id = a.id
---     AND a.rn = 1
---   WHERE c.rn = 1
--- ),
+google_account_latest AS (
+  SELECT
+    id,
+    descriptive_name,
+    ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
+  FROM `google_ads_v2.account_history`
+  WHERE _fivetran_active = TRUE
+),
+
+google_campaigns AS (
+  SELECT
+    c.id,
+    c.name,
+    a.id AS account_id
+  FROM google_campaign_latest c
+  INNER JOIN google_account_latest a
+    ON c.account_id = a.id
+    AND a.rn = 1
+  WHERE c.rn = 1
+),
 
 -- -- LinkedIn hierarchy: Campaign Group = Nexus Campaign, Campaign = Nexus AdSet
 -- -- Using campaign_group_history as the source for campaigns (not campaign_history)
@@ -164,14 +164,14 @@ all_campaigns AS (
     'facebook_ads' AS ad_network_id
   FROM facebook_campaigns
 
---   UNION ALL
+  UNION ALL
 
---   SELECT
---     CONCAT('google_ads_', CAST(id AS STRING)) AS id,
---     name AS campaign_name,
---     CONCAT('google_ads_', account_id) AS account_id,
---     'google_ads' AS ad_network_id
---   FROM google_campaigns
+  SELECT
+    CONCAT('google_ads_', CAST(id AS STRING)) AS id,
+    name AS campaign_name,
+    CONCAT('google_ads_', account_id) AS account_id,
+    'google_ads' AS ad_network_id
+  FROM google_campaigns
 
 --   UNION ALL
 

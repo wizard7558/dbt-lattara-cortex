@@ -2,7 +2,7 @@
   config(
     materialized='incremental',
     unique_key='id',
-    schema='nexus'
+    schema='cortex'
   )
 }}
 
@@ -26,29 +26,29 @@ facebook_ads AS (
   WHERE rn = 1
 ),
 
--- google_ad_latest AS (
---   SELECT
---     ad.id,
---     ad.name,
---     ad.ad_group_id AS adset_id,
---     ag.campaign_id,
---     ROW_NUMBER() OVER (PARTITION BY ad.id ORDER BY ad.updated_at DESC) AS rn
---   FROM `mavan-analytics.google_ads_v2.ad_history` ad
---   INNER JOIN `mavan-analytics.google_ads_v2.ad_group_history` ag
---     ON ad.ad_group_id = ag.id
---     AND ag._fivetran_active = TRUE
---   WHERE ad._fivetran_active = TRUE
--- ),
+google_ad_latest AS (
+  SELECT
+    ad.id,
+    ad.name,
+    ad.ad_group_id AS adset_id,
+    ag.campaign_id,
+    ROW_NUMBER() OVER (PARTITION BY ad.id ORDER BY ad.updated_at DESC) AS rn
+  FROM `google_ads_v2.ad_history` ad
+  INNER JOIN `google_ads_v2.ad_group_history` ag
+    ON ad.ad_group_id = ag.id
+    AND ag._fivetran_active = TRUE
+  WHERE ad._fivetran_active = TRUE
+),
 
--- google_ads AS (
---   SELECT
---     id,
---     name,
---     adset_id,
---     campaign_id
---   FROM google_ad_latest
---   WHERE rn = 1
--- ),
+google_ads AS (
+  SELECT
+    id,
+    name,
+    adset_id,
+    campaign_id
+  FROM google_ad_latest
+  WHERE rn = 1
+),
 
 -- linkedin_creative_latest AS (
 --   SELECT
@@ -114,26 +114,26 @@ facebook_ads AS (
 --   WHERE rn = 1
 -- ),
 
--- -- Google Performance Max synthetic ads (PMax has no ad-level data, only campaign-level)
--- google_pmax_campaigns AS (
---   SELECT
---     c.id,
---     c.name,
---     c.customer_id AS account_id
---   FROM `mavan-analytics.google_ads_v2.campaign_history` c
---   WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
---     AND c._fivetran_active = TRUE
---   QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1
--- ),
+-- Google Performance Max synthetic ads (PMax has no ad-level data, only campaign-level)
+google_pmax_campaigns AS (
+  SELECT
+    c.id,
+    c.name,
+    c.customer_id AS account_id
+  FROM `google_ads_v2.campaign_history` c
+  WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
+    AND c._fivetran_active = TRUE
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1
+),
 
--- google_pmax_ads AS (
---   SELECT
---     id,
---     name,
---     id AS adset_id,  -- For PMax, adset = campaign (synthetic)
---     id AS campaign_id
---   FROM google_pmax_campaigns
--- ),
+google_pmax_ads AS (
+  SELECT
+    id,
+    name,
+    id AS adset_id,  -- For PMax, adset = campaign (synthetic)
+    id AS campaign_id
+  FROM google_pmax_campaigns
+),
 
 all_ads AS (
   SELECT
@@ -144,15 +144,15 @@ all_ads AS (
     'facebook_ads' AS ad_network_id
   FROM facebook_ads
 
---   UNION ALL
+  UNION ALL
 
---   SELECT
---     CONCAT('google_ads_', CAST(id AS STRING)) AS id,
---     name AS ad_name,
---     CONCAT('google_ads_', CAST(adset_id AS STRING)) AS adset_id,
---     CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
---     'google_ads' AS ad_network_id
---   FROM google_ads
+  SELECT
+    CONCAT('google_ads_', CAST(id AS STRING)) AS id,
+    name AS ad_name,
+    CONCAT('google_ads_', CAST(adset_id AS STRING)) AS adset_id,
+    CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    'google_ads' AS ad_network_id
+  FROM google_ads
 
 --   UNION ALL
 
@@ -184,16 +184,16 @@ all_ads AS (
 --     'bingads' AS ad_network_id
 --   FROM bing_ads
 
---   UNION ALL
+  UNION ALL
 
---   -- Google Performance Max synthetic ads (campaign-level)
---   SELECT
---     CONCAT('google_ads_', CAST(id AS STRING), '_pmax') AS id,
---     CONCAT(name, ' (PMax)') AS ad_name,
---     CONCAT('google_ads_', CAST(adset_id AS STRING), '_pmax') AS adset_id,
---     CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
---     'google_ads' AS ad_network_id
---   FROM google_pmax_ads
+  -- Google Performance Max synthetic ads (campaign-level)
+  SELECT
+    CONCAT('google_ads_', CAST(id AS STRING), '_pmax') AS id,
+    CONCAT(name, ' (PMax)') AS ad_name,
+    CONCAT('google_ads_', CAST(adset_id AS STRING), '_pmax') AS adset_id,
+    CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    'google_ads' AS ad_network_id
+  FROM google_pmax_ads
 )
 
 SELECT

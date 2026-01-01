@@ -1,14 +1,14 @@
--- with google_conv as (
+with google_conv as (
 
--- select "google_ads" as ad_network_id
---      , CONCAT("google_ads_",customer_id) as account_id
---      , conversion_action_name as conversion_name
---      , sum(conversions) as count
--- from {{ ref('google_conversions') }}
--- group by 1,2,3
--- ),
+select "google_ads" as ad_network_id
+     , CONCAT("google_ads_",customer_id) as account_id
+     , conversion_action_name as conversion_name
+     , sum(conversions) as count
+from {{ ref('google_conversions') }}
+group by 1,2,3
+),
 
-with facebook_conv as (
+facebook_conv as (
 
 select "facebook_ads" as ad_network_id
      , CONCAT("facebook_ads_",act.accountid) as account_id
@@ -65,9 +65,9 @@ group by 1,2,3
 -- group by 1,2,3
 -- )
 
--- select * from google_conv
+select * from google_conv
 
--- union all
+union all
 
 select * from facebook_conv
 
