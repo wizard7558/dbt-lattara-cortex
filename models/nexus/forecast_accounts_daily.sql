@@ -2,7 +2,7 @@ WITH
 active_ads AS (
     SELECT
         ad_id
-    FROM `mavan-analytics.nexus.kpi_creative_daily`
+    FROM {{ ref('kpi_creative_daily') }}
     WHERE 
         latest_date = DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY) -- Always process from the last full day.
 ),
@@ -49,7 +49,7 @@ kpi AS (
     SUM(kpi_10_count) AS kpi_10_count,
     SUM(kpi_10_value) AS kpi_10_value,
 
-    FROM `mavan-analytics.nexus.kpi_creative_daily`
+    FROM {{ ref('kpi_creative_daily') }}
 
     WHERE ad_id IN (SELECT ad_id FROM active_ads)
 

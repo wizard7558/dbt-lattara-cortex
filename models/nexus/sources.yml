@@ -2,20 +2,20 @@ version: 2
 
 sources:
   - name: fivetran_metadata
-    database: mavan-analytics
+    database: res-analytics
     schema: fivetran_metadata
     tables:
       - name: connector_type
       
   - name: facebook_ads
-    database: mavan-analytics
+    database: res-analytics
     schema: facebook_ads_v2
     tables:
       - name: account_history
       - name: campaign_history
       
   - name: facebook_ads_v2
-    database: mavan-analytics
+    database: res-analytics
     schema: facebook_ads_v2
     tables:
       - name: account_history
@@ -23,7 +23,7 @@ sources:
       - name: campaign_country_daily
 
   - name: google_ads_v2
-    database: mavan-analytics
+    database: res-analytics
     schema: google_ads_v2
     tables:
       - name: account_history
@@ -31,7 +31,7 @@ sources:
       - name: campaign_country_report
       
   - name: linkedin_ads
-    database: mavan-analytics
+    database: res-analytics
     schema: linkedin_ads
     tables:
       - name: account_history
@@ -41,7 +41,7 @@ sources:
       - name: ad_analytics_by_campaign
       
   - name: tiktok_ads
-    database: mavan-analytics
+    database: res-analytics
     schema: tiktok_ads
     tables:
       - name: advertiser
@@ -50,7 +50,7 @@ sources:
       - name: campaign_country_report
 
   - name: bingads
-    database: mavan-analytics
+    database: res-analytics
     schema: bingads
     tables:
       - name: account_history
@@ -61,7 +61,7 @@ sources:
       - name: destination_url_performance_daily_report
 
   - name: bingads_microsoft_ads
-    database: mavan-analytics
+    database: res-analytics
     schema: bingads_microsoft_ads
     tables:
       - name: microsoft_ads__campaign_country_report

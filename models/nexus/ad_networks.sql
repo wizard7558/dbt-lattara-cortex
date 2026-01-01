@@ -1,7 +1,7 @@
 SELECT
   id,
   official_connector_name AS name
-FROM {{ source('fivetran_metadata', 'connector_type') }}
+FROM `fivetran_metadata.connector_type`
 WHERE deleted = FALSE
   AND type = 'Marketing'
 
