@@ -75,7 +75,7 @@ google_adsets AS (
 --     id,
 --     name,
 --     campaign_id
---   FROM tiktok_adgroup_latest
+--   FROM tiktok_adsets_latest
 --   WHERE rn = 1
 -- ),
 
@@ -125,14 +125,14 @@ all_adsets AS (
     'facebook_ads' AS ad_network_id
   FROM facebook_adsets
 
---   UNION ALL
+  UNION ALL
 
---   SELECT
---     CONCAT('google_ads_', CAST(id AS STRING)) AS id,
---     name AS adset_name,
---     CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
---     'google_ads' AS ad_network_id
---   FROM google_adsets
+  SELECT
+    CONCAT('google_ads_', CAST(id AS STRING)) AS id,
+    name AS adset_name,
+    CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    'google_ads' AS ad_network_id
+  FROM google_adsets
 
 --   UNION ALL
 
