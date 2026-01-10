@@ -6,6 +6,7 @@ WITH facebook_ad_latest AS (
     name,
     ad_set_id,
     campaign_id,
+    creative_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
   FROM `facebook_ads.ad_history`
 ),
@@ -15,7 +16,8 @@ facebook_ads AS (
     id,
     name,
     ad_set_id AS adset_id,
-    campaign_id
+    campaign_id,
+    creative_id,
   FROM facebook_ad_latest
   WHERE rn = 1
 ),
@@ -135,6 +137,7 @@ all_ads AS (
     name AS ad_name,
     CONCAT('facebook_ads_', CAST(adset_id AS STRING)) AS adset_id,
     CONCAT('facebook_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    CONCAT('facebook_ads_', CAST(creative_id AS STRING)) AS creative_id,
     'facebook_ads' AS ad_network_id
   FROM facebook_ads
 
@@ -145,6 +148,7 @@ all_ads AS (
     name AS ad_name,
     CONCAT('google_ads_', CAST(adset_id AS STRING)) AS adset_id,
     CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    null as creative_id,
     'google_ads' AS ad_network_id
   FROM google_ads
 
@@ -186,6 +190,7 @@ all_ads AS (
     CONCAT(name, ' (PMax)') AS ad_name,
     CONCAT('google_ads_', CAST(adset_id AS STRING), '_pmax') AS adset_id,
     CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+    null as creative_id,
     'google_ads' AS ad_network_id
   FROM google_pmax_ads
 )
@@ -195,6 +200,7 @@ SELECT
   a.ad_name,
   a.adset_id,
   a.campaign_id,
+  a.creative_id,
   a.ad_network_id,
   c.account_id,
   c.organization_id,
