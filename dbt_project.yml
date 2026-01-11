@@ -5,7 +5,7 @@ config-version: 2
 profile: 'default'
 
 dbt-cloud:
-  project-id: "117389"
+  project-id: 70471823538167
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -19,8 +19,31 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+# Multi-tenant variables for self-serve deployment
+# These can be overridden via environment variables or --vars flag
+vars:
+  # Target dataset for dbt output (client's cortex dataset)
+  target_dataset: "{{ env_var('DBT_TARGET_DATASET', 'cortex') }}"
+
+  # Source datasets for each platform (client's raw data datasets)
+  source_facebook_dataset: "{{ env_var('DBT_SOURCE_FACEBOOK', 'facebook_ads_v2') }}"
+  source_google_dataset: "{{ env_var('DBT_SOURCE_GOOGLE', 'google_ads_v2') }}"
+  source_linkedin_dataset: "{{ env_var('DBT_SOURCE_LINKEDIN', 'linkedin_ads') }}"
+  source_tiktok_dataset: "{{ env_var('DBT_SOURCE_TIKTOK', 'tiktok_ads') }}"
+  source_bingads_dataset: "{{ env_var('DBT_SOURCE_BINGADS', 'bingads') }}"
+  source_hubspot_dataset: "{{ env_var('DBT_SOURCE_HUBSPOT', 'hubspot') }}"
+  source_salesforce_dataset: "{{ env_var('DBT_SOURCE_SALESFORCE', 'salesforce') }}"
+
+  # Organization ID for client-specific logic
+  organization_id: "{{ env_var('DBT_ORGANIZATION_ID', '') }}"
+
 models:
   analytics:
     nexus:
-      +schema: cortex
+      +schema: "{{ var('target_dataset') }}"
       +materialized: table
+    allied_team:
+      +schema: allied_team
+      +materialized: table
+      staging:
+        +materialized: view

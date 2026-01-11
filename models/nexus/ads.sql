@@ -8,7 +8,7 @@ WITH facebook_ad_latest AS (
     campaign_id,
     creative_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-  FROM `facebook_ads.ad_history`
+  FROM {{ source('facebook_ads', 'ad_history') }}
 ),
 
 facebook_ads AS (
@@ -29,8 +29,8 @@ google_ad_latest AS (
     ad.ad_group_id AS adset_id,
     ag.campaign_id,
     ROW_NUMBER() OVER (PARTITION BY ad.id ORDER BY ad.updated_at DESC) AS rn
-  FROM `google_ads_v2.ad_history` ad
-  INNER JOIN `google_ads_v2.ad_group_history` ag
+  FROM {{ source('google_ads_v2', 'ad_history') }} ad
+  INNER JOIN {{ source('google_ads_v2', 'ad_group_history') }} ag
     ON ad.ad_group_id = ag.id
     AND ag._fivetran_active = TRUE
   WHERE ad._fivetran_active = TRUE
@@ -116,7 +116,7 @@ google_pmax_campaigns AS (
     c.id,
     c.name,
     c.customer_id AS account_id
-  FROM `google_ads_v2.campaign_history` c
+  FROM {{ source('google_ads_v2', 'campaign_history') }} c
   WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
     AND c._fivetran_active = TRUE
   QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1

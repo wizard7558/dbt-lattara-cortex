@@ -24,7 +24,7 @@ SELECT date
                 kw.keyword_text,
                 kw.keyword_match_type
           ) as conversion_actions_count
-FROM `google_ads_v2.keyword_conversions` kws
+FROM {{ source('google_ads_v2', 'keyword_conversions') }} kws
 LEFT JOIN {{ ref('google_accounts') }} acc
 on acc.customer_id = kws.customer_id
 LEFT JOIN {{ ref('google_campaigns') }} cam

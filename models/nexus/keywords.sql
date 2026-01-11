@@ -1,8 +1,7 @@
 {{
   config(
     materialized='incremental',
-    unique_key='id',
-    schema='cortex'
+    unique_key='id'
   )
 }}
 
@@ -16,7 +15,7 @@ WITH google_keyword_latest AS (
     keyword_text,
     keyword_match_type,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM `google_ads_v2.ad_group_criterion_history`
+  FROM {{ source('google_ads_v2', 'ad_group_criterion_history') }}
   WHERE type = 'KEYWORD'
 ),
 

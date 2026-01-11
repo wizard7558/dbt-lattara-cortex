@@ -1,0 +1,116 @@
+version: 2
+
+models:
+  - name: stg_allied_google_ads
+    description: >
+      Staged Google Ads (YouTube) data for Allied Team WFP campaigns.
+      Applies creative and media channel mappings per client specification.
+    columns:
+      - name: date
+        description: Report date
+      - name: campaign_id
+        description: Google Ads campaign ID
+        tests:
+          - accepted_values:
+              values: [23202415135, 23198130224, 23211264475]
+      - name: media_channel
+        description: Mapped media channel (Youtube Nonskip, SHORTS, or Skippable)
+      - name: plan_section
+        description: Audience targeting segment
+      - name: creative
+        description: Creative name (mapped per client spec)
+
+  - name: stg_allied_magnite
+    description: >
+      Staged Magnite CTV data for Allied Team WFP campaigns.
+      All data maps to Premium CTV, 1:1 Voter File Match.
+    columns:
+      - name: date
+        description: Report date
+      - name: media_channel
+        description: Always "Premium CTV" for Magnite
+      - name: reach
+        description: Unique reach metric
+
+  - name: stg_allied_jamloop
+    description: >
+      Staged Jamloop (Snowflake source) data for Allied Team WFP campaigns.
+      
+      KNOWN LIMITATION: Cannot distinguish Premium CTV vs Digital Pre-Roll
+      because source data lacks line item granularity. Currently all rows
+      default to Premium CTV. Waiting on updated Snowflake export with
+      line item identifiers.
+    columns:
+      - name: date
+        description: Report date
+      - name: platform_source
+        description: Always "Jamloop" (renamed from Snowflake per client request)
+      - name: publisher
+        description: Publisher/network detail (Jamloop specific)
+      - name: impressions
+        description: From ALLIED_SERVICES_LLD source
+      - name: reach
+        description: From ALLIED_SERVICES_CREATIVE_AGG source
+
+  - name: allied_unified_funnel
+    description: >
+      Unified funnel report combining Google Ads, Magnite, and Jamloop data.
+      Aggregated to line item grain for reporting.
+      
+      MISSING COLUMNS (require external data):
+      - impressions_ordered
+      - total_campaign_length_days  
+      - days_running
+      - delivery_pct
+      - pacing
+    columns:
+      - name: platform_source
+        description: Source platform (Google YouTube, Magnite, Jamloop)
+      - name: media_channel
+        description: Media channel type
+      - name: partner_platform
+        description: Partner/platform name
+      - name: plan_section
+        description: Targeting segment (1:1 Voter Match, Geo-Target College Campus)
+      - name: creative
+        description: Creative name
+      - name: impressions
+        description: Total impressions
+      - name: completions
+        description: Total video completions
+      - name: vcr_pct
+        description: Video completion rate (completions/impressions * 100)
+      - name: reach
+        description: Unique reach (not available for Google)
+      - name: frequency
+        description: Average frequency (impressions/reach)
+      - name: gross_spend
+        description: Total spend (not available for Jamloop)
+      - name: cpm
+        description: Cost per 1000 impressions
+
+  - name: allied_daily_funnel
+    description: >
+      Daily grain funnel report for time-series analysis and pacing calculations.
+      Includes cumulative metrics for delivery tracking.
+    columns:
+      - name: date
+        description: Report date
+      - name: impressions_cumulative
+        description: Running total of impressions by line item
+      - name: spend_cumulative
+        description: Running total of spend by line item
+
+  - name: allied_internal_report
+    description: >
+      Full internal report with pacing calculations.
+      Joins unified funnel with campaign order data from seed file.
+      
+      Pacing calculation: delivery_pct / time_elapsed_pct * 100
+      - >100 = ahead of pace
+      - <100 = behind pace
+    columns:
+      - name: pacing_pct
+        description: Pacing percentage (requires seed data to calculate)
+      - name: delivery_pct
+        description: Impressions delivered / impressions ordered * 100

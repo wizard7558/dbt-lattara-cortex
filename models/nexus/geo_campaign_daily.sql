@@ -55,7 +55,7 @@ with facebook_geo AS (
         COALESCE(clicks, 0) AS clicks,
         0 AS conversions,
         FALSE AS is_estimated
-    FROM `facebook_ads.campaign_country_daily`
+    FROM {{ source('facebook_ads', 'campaign_country_daily') }}
     WHERE country IS NOT NULL
 ),
 
@@ -69,7 +69,7 @@ google_geo AS (
         COALESCE(clicks, 0) AS clicks,
         COALESCE(all_conversions, 0) AS conversions,
         FALSE AS is_estimated
-    FROM `google_ads_v2.country_campaign_report` g
+    FROM {{ source('google_ads_v2', 'country_campaign_report') }} g
     LEFT JOIN {{ ref('google_geo_targets') }} gt
         ON g.country_criterion_id = gt.criterion_id
     WHERE gt.country_code IS NOT NULL

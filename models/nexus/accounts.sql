@@ -11,7 +11,7 @@ WITH facebook_latest AS (
     CAST(id AS STRING) as id,
     name as name,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY _fivetran_synced DESC) AS rn
-  FROM `facebook_ads.account_history`
+  FROM {{ source('facebook_ads', 'account_history') }}
 ),
 
 google_latest AS (
@@ -19,7 +19,7 @@ google_latest AS (
     CAST(id AS STRING) as id,
     CAST(descriptive_name AS STRING) as name,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM `google_ads_v2.account_history`
+  FROM {{ source('google_ads_v2', 'account_history') }}
   WHERE _fivetran_active = TRUE
 ),
 
@@ -40,6 +40,7 @@ google_latest AS (
 -- ),
 
 -- Existing accounts table with KPI mappings set via Supabase/UI
+-- Uses target_dataset variable for multi-tenant support
 existing_accounts AS (
   SELECT
     id,
@@ -53,7 +54,7 @@ existing_accounts AS (
     kpi_8,
     kpi_9,
     kpi_10
-  FROM `cortex.accounts`
+  FROM `{{ var('target_dataset') }}.accounts`
 ),
 
 all_accounts AS (
@@ -109,7 +110,7 @@ SELECT
     ea.kpi_9,
     ea.kpi_10
 FROM all_accounts aa
-LEFT JOIN `cortex.products` prod
+LEFT JOIN `{{ var('target_dataset') }}.products` prod
   ON aa.name = prod.account
   AND aa.ad_network_id = prod.ad_network_id
 LEFT JOIN existing_accounts ea

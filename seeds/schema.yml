@@ -3,7 +3,7 @@ version: 2
 seeds:
   - name: country_codes
     config:
-      schema: cortex
+      +schema: "{{ var('target_dataset') }}"
     description: "Mapping of country names to ISO 3166-1 alpha-2 codes (lowercase). Used for normalizing Bing/Microsoft Ads country names."
     columns:
       - name: country_name
@@ -13,7 +13,7 @@ seeds:
 
   - name: google_geo_targets
     config:
-      schema: cortex
+      +schema: "{{ var('target_dataset') }}"
     description: "Mapping of Google Ads criterion IDs to ISO country codes. Required for Google geographic_view reports."
     columns:
       - name: criterion_id
@@ -25,7 +25,7 @@ seeds:
 
   - name: linkedin_geo_urn
     config:
-      schema: cortex
+      +schema: "{{ var('target_dataset') }}"
     description: "Mapping of LinkedIn geo URNs to ISO country codes. LinkedIn API returns member_country as numeric URNs."
     columns:
       - name: geo_urn

@@ -4,6 +4,6 @@ select id, name
             id,
             name,
             row_number() over(partition by id order by _fivetran_synced desc) as rn
-        from `facebook_ads.account_history`
+        from {{ source('facebook_ads', 'account_history') }}
     )
     where rn = 1

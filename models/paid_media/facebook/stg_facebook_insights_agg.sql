@@ -6,7 +6,7 @@ select ad_id
      , sum(clicks) as total_clicks
      , sum(impressions) as total_impressions
      , sum(spend) as total_spend
-from `facebook_ads.ads_insights`
+from {{ source('facebook_ads', 'ads_insights') }}
 group by ad_id
      , date
      , account_id

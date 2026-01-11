@@ -3,15 +3,15 @@ WITH all_actions AS (
          , AD_ID
          , ACTION_TYPE
          , VALUE
-    FROM `facebook_ads.ads_insights_actions`
-    
+    FROM {{ source('facebook_ads', 'ads_insights_actions') }}
+
     UNION ALL
-    
+
     SELECT DATE
          , AD_ID
          , ACTION_TYPE
          , VALUE
-    FROM `facebook_ads.ads_insights_conversions`
+    FROM {{ source('facebook_ads', 'ads_insights_conversions') }}
 )
 
 select ad_id,

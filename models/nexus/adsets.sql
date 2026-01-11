@@ -1,8 +1,7 @@
 {{
   config(
     materialized='incremental',
-    unique_key='id',
-    schema='cortex'
+    unique_key='id'
   )
 }}
 
@@ -12,7 +11,7 @@ WITH facebook_adset_latest AS (
     name,
     campaign_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-  FROM `facebook_ads.ad_set_history`
+  FROM {{ source('facebook_ads', 'ad_set_history') }}
 ),
 
 facebook_adsets AS (
@@ -30,7 +29,7 @@ google_adgroup_latest AS (
     name,
     campaign_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM `google_ads_v2.ad_group_history`
+  FROM {{ source('google_ads_v2', 'ad_group_history') }}
   WHERE _fivetran_active = TRUE
 ),
 
@@ -103,7 +102,7 @@ google_pmax_campaigns AS (
     c.id,
     c.name,
     c.customer_id AS account_id
-  FROM `google_ads_v2.campaign_history` c
+  FROM {{ source('google_ads_v2', 'campaign_history') }} c
   WHERE c.advertising_channel_type = 'PERFORMANCE_MAX'
     AND c._fivetran_active = TRUE
   QUALIFY ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY c.updated_at DESC) = 1

@@ -34,7 +34,7 @@ google_keyword_dates AS (
     ad_group_criterion_criterion_id AS keyword_id,
     MIN(date) AS earliest_date,
     LEAST(MAX(date), inputs.at_date) AS latest_date
-  FROM `google_ads_v2.keyword_stats`
+  FROM {{ source('google_ads_v2', 'keyword_stats') }}
   CROSS JOIN inputs
   GROUP BY ad_group_criterion_criterion_id, inputs.at_date
 ),
@@ -46,7 +46,7 @@ google_keyword_conversions AS (
     conversion_action_name AS conversion_name,
     SUM(all_conversions) AS conversion_count,
     SUM(all_conversions_value) AS conversion_value
-  FROM `google_ads_v2.keyword_conversions`
+  FROM {{ source('google_ads_v2', 'keyword_conversions') }}
   WHERE conversion_action_name IS NOT NULL
   GROUP BY date, ad_group_criterion_criterion_id, conversion_action_name
 ),
@@ -63,7 +63,7 @@ google_keyword_base AS (
     SUM(COALESCE(ks.cost_micros, 0)) / 1000000.0 AS spend,
     SUM(COALESCE(ks.impressions, 0)) AS impressions,
     SUM(COALESCE(ks.clicks, 0)) AS clicks
-  FROM `google_ads_v2.keyword_stats` ks
+  FROM {{ source('google_ads_v2', 'keyword_stats') }} ks
   CROSS JOIN inputs
   INNER JOIN google_keyword_dates gd
     ON ks.ad_group_criterion_criterion_id = gd.keyword_id

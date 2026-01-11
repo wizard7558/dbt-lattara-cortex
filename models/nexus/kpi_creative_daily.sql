@@ -32,7 +32,7 @@ facebook_dates AS (
     ad_id,
     MIN(CAST(date AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date AS DATE)), inputs.at_date) AS latest_date
-  FROM `facebook_ads.basic_ad`
+  FROM {{ source('facebook_ads', 'basic_ad') }}
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
 ),
@@ -43,7 +43,7 @@ facebook_conversion_names AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_count
-  FROM `facebook_ads.basic_ad_actions`
+  FROM {{ source('facebook_ads', 'basic_ad_actions') }}
   GROUP BY date, ad_id, action_type
 ),
 
@@ -53,7 +53,7 @@ facebook_conversion_values AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_value
-  FROM `facebook_ads.ads_insights_action_values`
+  FROM {{ source('facebook_ads', 'ads_insights_action_values') }}
   GROUP BY date, ad_id, action_type
 ),
 
@@ -84,7 +84,7 @@ facebook_base AS (
     COALESCE(fb.spend, 0) as spend,
     COALESCE(fb.impressions, 0) as impressions,
     COALESCE(fb.inline_link_clicks, 0) AS clicks,
-  FROM `facebook_ads.basic_ad` fb
+  FROM {{ source('facebook_ads', 'basic_ad') }} fb
   CROSS JOIN inputs
   INNER JOIN (
     SELECT 
@@ -92,7 +92,7 @@ facebook_base AS (
       ad_set_id,
       campaign_id,
       ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-    FROM `facebook_ads.ad_history`
+    FROM {{ source('facebook_ads', 'ad_history') }}
   ) ah
     ON CAST(fb.ad_id AS INT64) = ah.id
     AND ah.rn = 1
@@ -169,7 +169,7 @@ google_dates AS (
     ad_id,
     MIN(CAST(date_day AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date_day AS DATE)), inputs.at_date) AS latest_date
-  FROM `google_ads_v2_google_ads.google_ads__ad_report`
+  FROM {{ source('google_ads_v2_google_ads', 'google_ads__ad_report') }}
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
 ),
@@ -181,7 +181,7 @@ google_conversions AS (
     conversion_action_name AS conversion_name,
     SUM(all_conversions) AS conversion_count,
     SUM(all_conversions_value) AS conversion_value
-  FROM `google_ads_v2.ads_conversions`
+  FROM {{ source('google_ads_v2', 'ads_conversions') }}
   WHERE conversion_action_name IS NOT NULL
   GROUP BY date, ad_id, conversion_action_name
 ),
@@ -198,7 +198,7 @@ google_base AS (
     COALESCE(gr.spend, 0) AS SPEND,
     COALESCE(gr.impressions, 0) AS impressions,
     COALESCE(gr.clicks, 0) AS clicks,
-  FROM `google_ads_v2_google_ads.google_ads__ad_report` gr
+  FROM {{ source('google_ads_v2_google_ads', 'google_ads__ad_report') }} gr
   CROSS JOIN inputs
   INNER JOIN google_dates gd
     ON gr.ad_id = gd.ad_id
@@ -269,7 +269,7 @@ google_performance AS (
 google_pmax_campaign_ids AS (
   -- Get all Performance Max campaign IDs
   SELECT DISTINCT id as campaign_id
-  FROM `google_ads_v2.campaign_history`
+  FROM {{ source('google_ads_v2', 'campaign_history') }}
   WHERE advertising_channel_type = 'PERFORMANCE_MAX'
 ),
 
@@ -279,7 +279,7 @@ google_pmax_dates AS (
     cs.id as campaign_id,
     MIN(cs.date) AS earliest_date,
     LEAST(MAX(cs.date), inputs.at_date) AS latest_date
-  FROM `google_ads_v2.campaign_stats` cs
+  FROM {{ source('google_ads_v2', 'campaign_stats') }} cs
   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
   CROSS JOIN inputs
   GROUP BY cs.id, inputs.at_date
@@ -292,7 +292,7 @@ google_pmax_conversions AS (
     cc.conversion_action_name AS conversion_name,
     SUM(cc.all_conversions) AS conversion_count,
     SUM(cc.all_conversions_value) AS conversion_value
-  FROM `google_ads_v2.campaign_conversions` cc
+  FROM {{ source('google_ads_v2', 'campaign_conversions') }} cc
   INNER JOIN google_pmax_campaign_ids pmax ON cc.id = pmax.campaign_id
   WHERE cc.conversion_action_name IS NOT NULL
   GROUP BY cc.date, cc.id, cc.conversion_action_name
@@ -311,7 +311,7 @@ google_pmax_base AS (
     SUM(COALESCE(cs.cost_micros, 0)) / 1000000.0 AS spend,
     SUM(COALESCE(cs.impressions, 0)) AS impressions,
     SUM(COALESCE(cs.clicks, 0)) AS clicks
-  FROM `google_ads_v2.campaign_stats` cs
+  FROM {{ source('google_ads_v2', 'campaign_stats') }} cs
   INNER JOIN google_pmax_campaign_ids pmax ON cs.id = pmax.campaign_id
   CROSS JOIN inputs
   INNER JOIN google_pmax_dates pd

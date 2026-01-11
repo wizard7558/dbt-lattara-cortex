@@ -6,7 +6,7 @@ WITH facebook_campaign_latest AS (
     name,
     account_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-  FROM `facebook_ads.campaign_history`
+  FROM {{ source('facebook_ads', 'campaign_history') }}
 ),
 
 facebook_account_latest AS (
@@ -14,7 +14,7 @@ facebook_account_latest AS (
     id,
     name,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY _fivetran_synced DESC) AS rn
-  FROM `facebook_ads.account_history`
+  FROM {{ source('facebook_ads', 'account_history') }}
 ),
 
 facebook_campaigns AS (
@@ -36,7 +36,7 @@ google_campaign_latest AS (
     name,
     customer_id AS account_id,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM `google_ads_v2.campaign_history`
+  FROM {{ source('google_ads_v2', 'campaign_history') }}
   WHERE _fivetran_active = TRUE
 ),
 
@@ -45,7 +45,7 @@ google_account_latest AS (
     id,
     descriptive_name,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM `google_ads_v2.account_history`
+  FROM {{ source('google_ads_v2', 'account_history') }}
   WHERE _fivetran_active = TRUE
 ),
 

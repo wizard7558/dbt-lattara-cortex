@@ -1,0 +1,51 @@
+version: 2
+
+sources:
+  - name: allied_team
+    database: res-analytics
+    schema: allied_team
+    description: Allied Team advertising data from Funnel.io
+    tables:
+      - name: google_ads_funnel
+        description: Google Ads (YouTube) campaign performance data
+        columns:
+          - name: date
+            description: Report date
+          - name: campaign_id
+            description: Google Ads campaign ID
+          - name: impressions
+            description: Number of ad impressions
+          - name: clicks
+            description: Number of clicks
+          - name: cost
+            description: Spend in account currency
+          - name: completions
+            description: Video completions
+            
+      - name: magnite_funnel
+        description: Magnite CTV campaign performance data
+        columns:
+          - name: date
+            description: Report date
+          - name: impressions
+            description: Number of ad impressions
+          - name: cost_
+            description: Spend in account currency
+          - name: completions
+            description: Video completions
+          - name: reach
+            description: Unique reach
+            
+      - name: snowflake_funnel
+        description: Jamloop campaign data via Snowflake
+        columns:
+          - name: date
+            description: Report date
+          - name: campaign
+            description: Campaign name (lacks line item granularity)
+          - name: impressions
+            description: Number of impressions (from ALLIED_SERVICES_LLD)
+          - name: reach
+            description: Unique reach (from ALLIED_SERVICES_CREATIVE_AGG)
+          - name: completions
+            description: Video completions
