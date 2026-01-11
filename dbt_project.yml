@@ -41,7 +41,8 @@ vars:
 models:
   analytics:
     nexus:
-      +schema: "{{ var('target_dataset') }}"
+      # Schema is determined by generate_schema_name macro using target_dataset var
+      +schema: cortex
       +materialized: table
     allied_team:
       +schema: allied_team

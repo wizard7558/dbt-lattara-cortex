@@ -1,9 +1,11 @@
 version: 2
 
+# Seeds use 'cortex' as default schema - generate_schema_name macro will override
+# when target_dataset var is set to a client-specific value
 seeds:
   - name: country_codes
     config:
-      +schema: "{{ var('target_dataset') }}"
+      +schema: cortex
     description: "Mapping of country names to ISO 3166-1 alpha-2 codes (lowercase). Used for normalizing Bing/Microsoft Ads country names."
     columns:
       - name: country_name
@@ -13,7 +15,7 @@ seeds:
 
   - name: google_geo_targets
     config:
-      +schema: "{{ var('target_dataset') }}"
+      +schema: cortex
     description: "Mapping of Google Ads criterion IDs to ISO country codes. Required for Google geographic_view reports."
     columns:
       - name: criterion_id
@@ -25,7 +27,7 @@ seeds:
 
   - name: linkedin_geo_urn
     config:
-      +schema: "{{ var('target_dataset') }}"
+      +schema: cortex
     description: "Mapping of LinkedIn geo URNs to ISO country codes. LinkedIn API returns member_country as numeric URNs."
     columns:
       - name: geo_urn
