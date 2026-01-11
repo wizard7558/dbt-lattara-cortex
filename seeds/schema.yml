@@ -36,3 +36,25 @@ seeds:
         description: "Full country name for reference"
       - name: country_code
         description: "Lowercase ISO 3166-1 alpha-2 code (e.g., 'us')"
+
+  - name: allied_campaign_orders
+    config:
+      +schema: allied_team
+    description: "Campaign order data for Allied Team pacing calculations. Contains impressions ordered, budgets, and flight dates."
+    columns:
+      - name: platform_source
+        description: "Source platform (Google YouTube, Magnite, Jamloop)"
+      - name: media_channel
+        description: "Media channel type"
+      - name: plan_section
+        description: "Targeting segment"
+      - name: creative
+        description: "Creative name"
+      - name: impressions_ordered
+        description: "Total impressions ordered for this line item"
+      - name: campaign_start_date
+        description: "Campaign flight start date"
+      - name: campaign_end_date
+        description: "Campaign flight end date"
+      - name: budget
+        description: "Budget for this line item"
