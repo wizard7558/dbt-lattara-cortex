@@ -45,21 +45,21 @@
 --     GROUP BY 1, 2, 3
 -- ),
 
-with facebook_geo AS (
-    SELECT
-        date AS date,
-        CONCAT('facebook_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
-        LOWER(country) AS country_code,
-        COALESCE(spend, 0) AS spend,
-        COALESCE(impressions, 0) AS impressions,
-        COALESCE(clicks, 0) AS clicks,
-        0 AS conversions,
-        FALSE AS is_estimated
-    FROM {{ source('facebook_ads', 'campaign_country_daily') }}
-    WHERE country IS NOT NULL
-),
+-- facebook_geo AS (
+--     SELECT
+--         date AS date,
+--         CONCAT('facebook_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
+--         LOWER(country) AS country_code,
+--         COALESCE(spend, 0) AS spend,
+--         COALESCE(impressions, 0) AS impressions,
+--         COALESCE(clicks, 0) AS clicks,
+--         0 AS conversions,
+--         FALSE AS is_estimated
+--     FROM {{ source('facebook_ads', 'campaign_country_daily') }}
+--     WHERE country IS NOT NULL
+-- ),
 
-google_geo AS (
+with google_geo AS (
     SELECT
         date AS date,
         CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
@@ -175,8 +175,8 @@ all_geo AS (
     -- UNION ALL
     -- SELECT * FROM bing_geo
     -- UNION ALL
-    SELECT * FROM facebook_geo
-    UNION ALL
+    -- SELECT * FROM facebook_geo  -- Uncomment when campaign_country_daily exists
+    -- UNION ALL
     SELECT * FROM google_geo
     -- UNION ALL
     -- SELECT * FROM linkedin_geo
