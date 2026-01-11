@@ -20,22 +20,23 @@ clean-targets:
   - "dbt_packages"
 
 # Multi-tenant variables for self-serve deployment
-# These can be overridden via environment variables or --vars flag
+# Override via --vars flag: dbt run --vars '{"target_dataset": "com_client_cortex", ...}'
+# Default values match the legacy shared dataset names for backwards compatibility
 vars:
   # Target dataset for dbt output (client's cortex dataset)
-  target_dataset: "{{ env_var('DBT_TARGET_DATASET', 'cortex') }}"
+  target_dataset: "cortex"
 
   # Source datasets for each platform (client's raw data datasets)
-  source_facebook_dataset: "{{ env_var('DBT_SOURCE_FACEBOOK', 'facebook_ads_v2') }}"
-  source_google_dataset: "{{ env_var('DBT_SOURCE_GOOGLE', 'google_ads_v2') }}"
-  source_linkedin_dataset: "{{ env_var('DBT_SOURCE_LINKEDIN', 'linkedin_ads') }}"
-  source_tiktok_dataset: "{{ env_var('DBT_SOURCE_TIKTOK', 'tiktok_ads') }}"
-  source_bingads_dataset: "{{ env_var('DBT_SOURCE_BINGADS', 'bingads') }}"
-  source_hubspot_dataset: "{{ env_var('DBT_SOURCE_HUBSPOT', 'hubspot') }}"
-  source_salesforce_dataset: "{{ env_var('DBT_SOURCE_SALESFORCE', 'salesforce') }}"
+  source_facebook_dataset: "facebook_ads_v2"
+  source_google_dataset: "google_ads_v2"
+  source_linkedin_dataset: "linkedin_ads"
+  source_tiktok_dataset: "tiktok_ads"
+  source_bingads_dataset: "bingads"
+  source_hubspot_dataset: "hubspot"
+  source_salesforce_dataset: "salesforce"
 
   # Organization ID for client-specific logic
-  organization_id: "{{ env_var('DBT_ORGANIZATION_ID', '') }}"
+  organization_id: ""
 
 models:
   analytics:

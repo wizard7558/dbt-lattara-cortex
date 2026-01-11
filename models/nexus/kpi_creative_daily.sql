@@ -32,7 +32,7 @@ facebook_dates AS (
     ad_id,
     MIN(CAST(date AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date AS DATE)), inputs.at_date) AS latest_date
-  FROM {{ source('facebook_ads', 'basic_ad') }}
+  FROM {{ source('facebook_ads', 'ads_insights') }}
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
 ),
@@ -43,7 +43,7 @@ facebook_conversion_names AS (
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_count
-  FROM {{ source('facebook_ads', 'basic_ad_actions') }}
+  FROM {{ source('facebook_ads', 'ads_insights_actions') }}
   GROUP BY date, ad_id, action_type
 ),
 
@@ -84,10 +84,10 @@ facebook_base AS (
     COALESCE(fb.spend, 0) as spend,
     COALESCE(fb.impressions, 0) as impressions,
     COALESCE(fb.inline_link_clicks, 0) AS clicks,
-  FROM {{ source('facebook_ads', 'basic_ad') }} fb
+  FROM {{ source('facebook_ads', 'ads_insights') }} fb
   CROSS JOIN inputs
   INNER JOIN (
-    SELECT 
+    SELECT
       id,
       ad_set_id,
       campaign_id,
