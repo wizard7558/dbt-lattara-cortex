@@ -20,7 +20,7 @@ mapped as (
     select
         -- Date & IDs
         date,
-        campaign_id,
+        cast(campaign_id as string) as campaign_id,
         ad_group_id,
         ad_id,
         
