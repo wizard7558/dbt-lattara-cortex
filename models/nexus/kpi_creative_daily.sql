@@ -45,6 +45,14 @@ facebook_conversion_names AS (
     SUM(CAST(value AS FLOAT64)) AS conversion_count
   FROM {{ source('facebook_ads', 'ads_insights_actions') }}
   GROUP BY date, ad_id, action_type
+  UNION ALL 
+  SELECT
+    CAST(date AS DATE) AS date,
+    CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
+    action_type AS conversion_name,
+    SUM(CAST(value AS FLOAT64)) AS conversion_count
+  FROM {{ source('facebook_ads', 'ads_insights_conversions') }}
+  GROUP BY date, ad_id, action_type
 ),
 
 facebook_conversion_values AS (
@@ -54,6 +62,14 @@ facebook_conversion_values AS (
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_value
   FROM {{ source('facebook_ads', 'ads_insights_action_values') }}
+  GROUP BY date, ad_id, action_type
+  UNION ALL 
+  SELECT
+    CAST(date AS DATE) AS date,
+    CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
+    action_type AS conversion_name,
+    SUM(CAST(value AS FLOAT64)) AS conversion_value
+  FROM {{ source('facebook_ads', 'ads_insights_conversion_values') }}
   GROUP BY date, ad_id, action_type
 ),
 
@@ -1170,3 +1186,5 @@ GROUP BY
 
 SELECT *
 FROM final
+where kpi_1_name = 'schedule_total'
+order by kpi_1_count desc

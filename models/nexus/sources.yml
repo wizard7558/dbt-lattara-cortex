@@ -24,6 +24,7 @@ sources:
       - name: ads_insights_actions
       - name: ads_insights_conversions
       - name: ads_insights_action_values
+      - name: ads_insights_conversion_values
       - name: campaign_country_daily
 
   - name: facebook_ads_v2
