@@ -1186,5 +1186,3 @@ GROUP BY
 
 SELECT *
 FROM final
-where kpi_1_name = 'schedule_total'
-order by kpi_1_count desc
