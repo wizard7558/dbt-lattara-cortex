@@ -808,11 +808,11 @@ bing_performance AS (
   LEFT JOIN `res-analytics.nexus.accounts` a
     ON bb.account_id = a.id
   GROUP BY bb.date, bb.earliest_date, bb.latest_date, bb.ad_id, bb.adset_id, bb.campaign_id, bb.account_id
--- ),
+),
 
--- --------------------------------------------------------------------
--- -- All Performance
--- --------------------------------------------------------------------
+--------------------------------------------------------------------
+-- All Performance
+--------------------------------------------------------------------
 all_performance AS (
   SELECT * FROM facebook_performance
   UNION ALL
