@@ -42,7 +42,7 @@ sources:
     tables:
       - name: account_history
       - name: campaign_history
-      - name: campaign_country_report
+      - name: country_campaign_report
       - name: ad_history
       - name: ad_group_history
       - name: ad_group_criterion_history
