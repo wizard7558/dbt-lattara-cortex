@@ -825,7 +825,7 @@ all_performance AS (
 --   SELECT * FROM tiktok_performance
 --   UNION ALL
 --   SELECT * FROM bing_performance
--- ),
+),
 
 --------------------------------------------------------------------
 -- Creative Fatigue
