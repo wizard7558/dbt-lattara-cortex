@@ -1,0 +1,132 @@
+version: 2
+
+models:
+  - name: int_campaigns_unified
+    description: "Unified campaign data from all ad platforms (Google, Meta, LinkedIn)"
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: campaign_id
+        description: "Campaign identifier (unique per platform)"
+        tests:
+          - not_null
+      - name: date
+        description: "Metrics date"
+        tests:
+          - not_null
+      - name: source_platform
+        description: "Source platform (google_ads, meta_ads, linkedin_ads)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+
+  - name: int_ad_groups_unified
+    description: "Unified ad group data from all ad platforms"
+    columns:
+      - name: account_id
+        tests:
+          - not_null
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: ad_group_id
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: source_platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+
+  - name: int_ads_unified
+    description: "Unified ad data from all ad platforms"
+    columns:
+      - name: account_id
+        tests:
+          - not_null
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: ad_group_id
+        tests:
+          - not_null
+      - name: ad_id
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: source_platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+
+  # ===========================================================================
+  # Fivetran Unified Models
+  # ===========================================================================
+  - name: int_fivetran_campaigns_unified
+    description: "Unified campaign data from all ad platforms via Fivetran (Google, Meta, LinkedIn, TikTok)"
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: campaign_id
+        description: "Campaign identifier (unique per platform)"
+        tests:
+          - not_null
+      - name: date
+        description: "Metrics date"
+        tests:
+          - not_null
+      - name: source_platform
+        description: "Source platform (google_ads, meta_ads, linkedin_ads, tiktok_ads)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']
+      - name: impressions
+        description: "Total impressions"
+      - name: clicks
+        description: "Total clicks"
+      - name: link_clicks
+        description: "Link clicks (more accurate for CTR calculation)"
+      - name: spend
+        description: "Total spend in account currency"
+      - name: conversions
+        description: "Total conversions"
+      - name: conversion_value
+        description: "Total conversion value"
+
+  - name: int_fivetran_conversions
+    description: "Unified conversion events from all ad platforms via Fivetran"
+    columns:
+      - name: campaign_id
+        description: "Campaign identifier"
+        tests:
+          - not_null
+      - name: date
+        description: "Conversion date"
+        tests:
+          - not_null
+      - name: event_name
+        description: "Normalized event name (Purchase, Lead, Registration, etc.)"
+        tests:
+          - not_null
+      - name: event_count
+        description: "Number of conversion events"
+      - name: event_value
+        description: "Total value of conversion events"
+      - name: platform
+        description: "Source platform"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']

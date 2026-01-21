@@ -1,0 +1,472 @@
+version: 2
+
+models:
+  - name: mart_kpi_daily
+    description: >
+      Daily KPI metrics at campaign level. Primary analytics table for Cortex dashboards.
+      Always filter by user_id for multi-tenant isolation.
+    columns:
+      - name: user_id
+        description: User identifier for multi-tenant filtering (extracted from Fivetran schema name)
+        tests:
+          - not_null
+      - name: account_id
+        description: Ad platform account ID
+        tests:
+          - not_null
+      - name: campaign_id
+        description: Campaign ID from the ad platform
+        tests:
+          - not_null
+      - name: platform
+        description: Source ad platform
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['META_ADS', 'GOOGLE_ADS', 'LINKEDIN_ADS', 'TIKTOK_ADS']
+      - name: date
+        description: Date of the metrics (partitioning key)
+        tests:
+          - not_null
+      - name: spend
+        description: Amount spent in account currency
+      - name: ctr
+        description: Click-through rate as percentage (link_clicks / impressions * 100)
+      - name: roas
+        description: Return on ad spend (conversion_value / spend)
+
+  - name: mart_campaigns
+    description: Campaign dimension table with metadata
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+      - name: campaign_id
+        tests:
+          - not_null
+
+  - name: campaign_performance
+    description: |
+      Campaign-level performance metrics across all ad platforms.
+      This is the primary table for the campaign overview dashboard.
+
+      Calculated metrics:
+      - CTR (Click-through rate): clicks / impressions * 100
+      - CPC (Cost per click): spend / clicks
+      - CPM (Cost per mille): spend / impressions * 1000
+      - CPA (Cost per acquisition): spend / conversions
+      - ROAS (Return on ad spend): conversion_value / spend
+      - Conversion rate: conversions / clicks * 100
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: source_platform
+        description: "Source platform (google_ads, meta_ads, linkedin_ads)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+      - name: campaign_id
+        description: "Campaign identifier"
+        tests:
+          - not_null
+      - name: date
+        description: "Metrics date (partition key)"
+        tests:
+          - not_null
+      - name: impressions
+        description: "Number of ad impressions"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: clicks
+        description: "Number of ad clicks"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: spend
+        description: "Amount spent in account currency"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: ctr
+        description: "Click-through rate (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: roas
+        description: "Return on ad spend (ratio)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  - name: ad_group_performance
+    description: |
+      Ad group-level performance metrics across all ad platforms.
+      Supports drill-down from campaign to ad group level analysis.
+    columns:
+      - name: account_id
+        tests:
+          - not_null
+      - name: source_platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: ad_group_id
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: impressions
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: spend
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  - name: ad_performance
+    description: |
+      Ad-level performance metrics with creative metadata.
+      Supports the creative analytics gallery and fatigue detection.
+    columns:
+      - name: account_id
+        tests:
+          - not_null
+      - name: source_platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: ad_group_id
+        tests:
+          - not_null
+      - name: ad_id
+        tests:
+          - not_null
+      - name: date
+        tests:
+          - not_null
+      - name: impressions
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: spend
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  - name: creative_fatigue
+    description: |
+      Creative fatigue detection using rolling 7-day CTR analysis.
+      Identifies ads whose CTR has dropped significantly from baseline.
+
+      Fatigue status levels:
+      - FATIGUED: CTR dropped 50%+ from baseline (urgent action needed)
+      - WARNING: CTR dropped 30-50% from baseline (monitor closely)
+      - HEALTHY: CTR within 30% of baseline
+
+      Only includes days with 100+ impressions for statistical significance.
+      Baseline is established from first complete 7-day window.
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: ad_id
+        description: "Ad identifier"
+        tests:
+          - not_null
+      - name: ad_name
+        description: "Ad name for display"
+      - name: source_platform
+        description: "Source platform (google_ads, meta_ads, linkedin_ads)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+      - name: date
+        description: "Metrics date (partition key)"
+        tests:
+          - not_null
+      - name: impressions
+        description: "Daily impressions (minimum 100 for inclusion)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 100
+      - name: clicks
+        description: "Daily clicks"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: spend
+        description: "Daily spend in account currency"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: ctr
+        description: "Daily click-through rate (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: ctr_7day_avg
+        description: "7-day rolling average CTR (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: baseline_ctr
+        description: "Baseline CTR from first 7-day window (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: ctr_change_pct
+        description: "Change from baseline as decimal (-0.5 = 50% decline)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -1
+              max_value: 10
+      - name: fatigue_status
+        description: "Fatigue status: FATIGUED, WARNING, or HEALTHY"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['FATIGUED', 'WARNING', 'HEALTHY']
+
+  - name: creative_performance
+    description: |
+      Creative-level performance aggregation with fatigue status.
+      Aggregates ad_performance by ad_id for lifetime metrics.
+
+      Includes:
+      - Lifetime metrics: impressions, clicks, spend, conversions
+      - Calculated metrics: CTR, CPC, CPM, CPA, ROAS, conversion rate
+      - Lifecycle dates: first_seen_date, last_active_date
+      - Fatigue status from creative_fatigue model
+
+      Used for the creative gallery and performance analysis.
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: ad_id
+        description: "Ad identifier"
+        tests:
+          - not_null
+      - name: ad_name
+        description: "Ad name for display"
+      - name: source_platform
+        description: "Source platform (google_ads, meta_ads, linkedin_ads)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+      - name: total_impressions
+        description: "Lifetime total impressions"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: total_clicks
+        description: "Lifetime total clicks"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: total_spend
+        description: "Lifetime total spend in account currency"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: total_conversions
+        description: "Lifetime total conversions"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: ctr
+        description: "Lifetime click-through rate (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: roas
+        description: "Lifetime return on ad spend (ratio)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: first_seen_date
+        description: "First date the ad had metrics (partition key)"
+        tests:
+          - not_null
+      - name: last_active_date
+        description: "Most recent date the ad had metrics"
+        tests:
+          - not_null
+      - name: fatigue_status
+        description: "Latest fatigue status: FATIGUED, WARNING, HEALTHY, or UNKNOWN"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['FATIGUED', 'WARNING', 'HEALTHY', 'UNKNOWN']
+
+  - name: audience_performance
+    description: |
+      Audience demographic performance metrics across all ad platforms.
+      Provides breakdown by demographic type (age, gender, location, device).
+
+      For LinkedIn, uses B2B demographics: company_size, seniority, industry.
+
+      Calculated metrics:
+      - CTR (Click-through rate): clicks / impressions * 100
+      - CPC (Cost per click): spend / clicks
+      - CPA (Cost per acquisition): spend / conversions
+      - ROAS (Return on ad spend): conversion_value / spend
+    columns:
+      - name: account_id
+        description: "Ad account identifier"
+        tests:
+          - not_null
+      - name: source_platform
+        description: "Source platform (GOOGLE_ADS, META_ADS, LINKEDIN_ADS)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['GOOGLE_ADS', 'META_ADS', 'LINKEDIN_ADS']
+      - name: campaign_id
+        description: "Campaign identifier"
+        tests:
+          - not_null
+      - name: demographic_type
+        description: "Type of demographic breakdown (age, gender, location, device, company_size, seniority, industry)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['age', 'gender', 'location', 'device', 'company_size', 'seniority', 'industry']
+      - name: demographic_value
+        description: "Demographic segment value (e.g., '18-24', 'male', 'United States')"
+        tests:
+          - not_null
+      - name: date
+        description: "Metrics date (partition key)"
+        tests:
+          - not_null
+      - name: impressions
+        description: "Number of ad impressions"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: clicks
+        description: "Number of ad clicks"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: spend
+        description: "Amount spent in account currency"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: conversions
+        description: "Number of conversions"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: conversion_value
+        description: "Total conversion value"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: ctr
+        description: "Click-through rate (percentage)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: cpc
+        description: "Cost per click"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: cpa
+        description: "Cost per acquisition"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: roas
+        description: "Return on ad spend (ratio)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  - name: mart_conversion_events
+    description: |
+      Conversion events mart for KPI selection and analytics.
+      Aggregates conversion events to campaign-day-event level for efficient queries.
+
+      Clustered by user_id for multi-tenant filtering.
+      Partitioned by date for efficient date range queries.
+
+      Standard event names:
+      - Purchase, Lead, Registration, AddToCart, InitiateCheckout
+      - ViewContent, Contact, Subscribe, ExternalConversions
+      - Custom conversion names from platform-specific events
+    columns:
+      - name: user_id
+        description: "User identifier for multi-tenant filtering"
+        tests:
+          - not_null
+      - name: account_id
+        description: "Ad platform account ID"
+        tests:
+          - not_null
+      - name: campaign_id
+        description: "Campaign ID from the ad platform"
+        tests:
+          - not_null
+      - name: platform
+        description: "Source ad platform"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['META_ADS', 'GOOGLE_ADS', 'LINKEDIN_ADS', 'TIKTOK_ADS']
+      - name: date
+        description: "Date of the conversion events (partitioning key)"
+        tests:
+          - not_null
+      - name: event_name
+        description: "Normalized conversion event name"
+        tests:
+          - not_null
+      - name: event_count
+        description: "Number of conversion events"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: event_value
+        description: "Total value of conversion events"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: ad_count
+        description: "Number of distinct ads with this conversion"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: avg_value_per_event
+        description: "Average value per conversion event"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0

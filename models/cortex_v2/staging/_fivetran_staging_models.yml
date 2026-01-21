@@ -1,0 +1,227 @@
+version: 2
+
+models:
+  # ===========================================================================
+  # Meta Ads Staging Models
+  # ===========================================================================
+  - name: stg_fivetran_meta__campaigns
+    description: "Staged Meta Ads campaigns with daily metrics from Fivetran"
+    columns:
+      - name: account_id
+        description: "Meta Ad Account ID"
+        data_tests:
+          - not_null
+
+      - name: campaign_id
+        description: "Meta Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Metrics date"
+        data_tests:
+          - not_null
+
+      - name: campaign_name
+        description: "Campaign name"
+
+      - name: impressions
+        description: "Total impressions"
+
+      - name: clicks
+        description: "Total clicks (includes all click types)"
+
+      - name: link_clicks
+        description: "Link clicks only (from inline_link_clicks, more accurate for CTR)"
+
+      - name: spend
+        description: "Total spend in account currency"
+
+      - name: conversions
+        description: "Purchase conversions"
+
+      - name: conversion_value
+        description: "Purchase conversion value"
+
+      - name: source_platform
+        description: "Always 'meta_ads'"
+
+  - name: stg_fivetran_meta__conversions
+    description: "Staged Meta Ads conversion events by campaign"
+    columns:
+      - name: campaign_id
+        description: "Meta Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Conversion date"
+        data_tests:
+          - not_null
+
+      - name: event_name
+        description: "Normalized event name (Purchase, Lead, Registration, etc.)"
+        data_tests:
+          - not_null
+
+      - name: event_count
+        description: "Number of conversion events"
+
+      - name: event_value
+        description: "Total value of conversion events"
+
+  # ===========================================================================
+  # Google Ads Staging Models
+  # ===========================================================================
+  - name: stg_fivetran_google__campaigns
+    description: "Staged Google Ads campaigns with daily metrics from Fivetran"
+    columns:
+      - name: account_id
+        description: "Google Ads Customer ID"
+        data_tests:
+          - not_null
+
+      - name: campaign_id
+        description: "Google Ads Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Metrics date"
+        data_tests:
+          - not_null
+
+      - name: campaign_name
+        description: "Campaign name"
+
+      - name: impressions
+        description: "Total impressions"
+
+      - name: clicks
+        description: "Total clicks"
+
+      - name: spend
+        description: "Total spend (cost_micros converted to dollars)"
+
+      - name: conversions
+        description: "Total conversions"
+
+      - name: conversion_value
+        description: "Total conversion value"
+
+      - name: source_platform
+        description: "Always 'google_ads'"
+
+  - name: stg_fivetran_google__conversions
+    description: "Staged Google Ads conversion events by campaign"
+    columns:
+      - name: account_id
+        description: "Google Ads Customer ID"
+
+      - name: campaign_id
+        description: "Google Ads Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Conversion date"
+        data_tests:
+          - not_null
+
+      - name: event_name
+        description: "Normalized event name"
+        data_tests:
+          - not_null
+
+      - name: event_count
+        description: "Number of conversion events"
+
+      - name: event_value
+        description: "Total value of conversion events"
+
+  # ===========================================================================
+  # LinkedIn Ads Staging Models
+  # ===========================================================================
+  - name: stg_fivetran_linkedin__campaigns
+    description: "Staged LinkedIn Ads campaigns with daily metrics from Fivetran"
+    columns:
+      - name: account_id
+        description: "LinkedIn Ad Account ID"
+        data_tests:
+          - not_null
+
+      - name: campaign_id
+        description: "LinkedIn Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Metrics date"
+        data_tests:
+          - not_null
+
+      - name: campaign_name
+        description: "Campaign name"
+
+      - name: impressions
+        description: "Total impressions"
+
+      - name: clicks
+        description: "Total clicks"
+
+      - name: spend
+        description: "Total spend in local currency"
+
+      - name: conversions
+        description: "External website conversions"
+
+      - name: conversion_value
+        description: "Conversion value in local currency"
+
+      - name: source_platform
+        description: "Always 'linkedin_ads'"
+
+  # ===========================================================================
+  # TikTok Ads Staging Models
+  # ===========================================================================
+  - name: stg_fivetran_tiktok__campaigns
+    description: "Staged TikTok Ads campaigns with daily metrics from Fivetran"
+    columns:
+      - name: account_id
+        description: "TikTok Advertiser ID"
+        data_tests:
+          - not_null
+
+      - name: campaign_id
+        description: "TikTok Campaign ID"
+        data_tests:
+          - not_null
+
+      - name: date
+        description: "Metrics date"
+        data_tests:
+          - not_null
+
+      - name: campaign_name
+        description: "Campaign name"
+
+      - name: impressions
+        description: "Total impressions"
+
+      - name: clicks
+        description: "Total clicks"
+
+      - name: spend
+        description: "Total spend"
+
+      - name: reach
+        description: "Unique users reached"
+
+      - name: conversions
+        description: "Total conversions"
+
+      - name: conversion_value
+        description: "Total conversion value"
+
+      - name: source_platform
+        description: "Always 'tiktok_ads'"
