@@ -38,6 +38,10 @@ vars:
   # Organization ID for client-specific logic
   organization_id: ""
 
+  # Cortex V2 multi-tenant variables
+  gcp_project: "res-analytics"
+  output_dataset: "cortex_marts"  # Output dataset for cortex_v2 marts
+
 models:
   analytics:
     nexus:
@@ -49,3 +53,11 @@ models:
       +materialized: table
       staging:
         +materialized: view
+    cortex_v2:
+      +schema: cortex_marts
+      staging:
+        +materialized: view
+      intermediate:
+        +materialized: view
+      marts:
+        +materialized: table
