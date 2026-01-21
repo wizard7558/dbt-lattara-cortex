@@ -6,16 +6,16 @@
 
 /*
  * Unified Google Ads Stats across all customers
- * Source: Fivetran ad_stats table (daily ad-level metrics)
+ * Source: Fivetran keyword_stats table (daily keyword-level metrics)
  *
- * This staging model unions the ad_stats table from all customer
- * Fivetran schemas, adding user_id extracted from the schema name pattern.
+ * Google Ads uses keyword-level reporting (not ad-level like Meta/LinkedIn).
+ * This staging model unions keyword_stats from all customer Fivetran schemas.
  *
  * Key transformation: Convert cost_micros to dollars (Google stores cost in micros).
  */
 
 WITH unioned AS (
-  {{ union_all_schemas('GOOGLE_ADS', 'ad_stats') }}
+  {{ union_all_schemas('GOOGLE_ADS', 'keyword_stats') }}
 ),
 
 transformed AS (
@@ -27,7 +27,7 @@ transformed AS (
     CAST(customer_id AS STRING) AS account_id,
     CAST(campaign_id AS STRING) AS campaign_id,
     CAST(ad_group_id AS STRING) AS adset_id,  -- Normalize to adset_id
-    CAST(id AS STRING) AS ad_id,
+    CAST(criterion_id AS STRING) AS ad_id,  -- keyword criterion_id as ad_id equivalent
 
     -- Date
     CAST(date AS DATE) AS date,
