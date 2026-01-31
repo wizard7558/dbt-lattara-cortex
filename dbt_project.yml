@@ -26,7 +26,14 @@ vars:
   # Target dataset for dbt output (client's cortex dataset)
   target_dataset: "cortex"
 
+  # Nexus-style variables for graceful degradation pattern
+  # These construct schema names like: {bq_dataset_id}_facebook_ads
+  bq_project_id: "res-analytics"
+  bq_dataset_id: "cortex"  # Will be overridden per-client, e.g., "com_acme"
+
   # Source datasets for each platform (client's raw data datasets)
+  # Note: These are kept for backwards compatibility but the nexus pattern
+  # uses bq_dataset_id to construct schema names dynamically
   source_facebook_dataset: "facebook_ads_v2"
   source_google_dataset: "google_ads_v2"
   source_linkedin_dataset: "linkedin_ads"
