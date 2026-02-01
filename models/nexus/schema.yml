@@ -1,0 +1,141 @@
+version: 2
+
+models:
+  - name: accounts
+    description: Unified accounts dimension table across all ad platforms
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: id
+        data_type: STRING
+        description: Unique account identifier (prefixed with ad_network_id)
+      - name: name
+        data_type: STRING
+        description: Account name
+      - name: ad_network_id
+        data_type: STRING
+        description: Ad platform identifier (facebook_ads, google_ads, linkedin_ads, tiktok_ads)
+      - name: product_id
+        data_type: STRING
+        description: Associated product ID (nullable)
+      - name: organization_id
+        data_type: STRING
+        description: Organization ID from dbt variable
+      - name: kpi_1
+        data_type: STRING
+        description: Custom KPI field 1
+      - name: kpi_2
+        data_type: STRING
+        description: Custom KPI field 2
+      - name: kpi_3
+        data_type: STRING
+        description: Custom KPI field 3
+      - name: kpi_4
+        data_type: STRING
+        description: Custom KPI field 4
+      - name: kpi_5
+        data_type: STRING
+        description: Custom KPI field 5
+      - name: kpi_6
+        data_type: STRING
+        description: Custom KPI field 6
+      - name: kpi_7
+        data_type: STRING
+        description: Custom KPI field 7
+      - name: kpi_8
+        data_type: STRING
+        description: Custom KPI field 8
+      - name: kpi_9
+        data_type: STRING
+        description: Custom KPI field 9
+      - name: kpi_10
+        data_type: STRING
+        description: Custom KPI field 10
+
+  - name: campaigns
+    description: Unified campaigns dimension table across all ad platforms
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: id
+        data_type: STRING
+        description: Unique campaign identifier (prefixed with ad_network_id)
+      - name: campaign_name
+        data_type: STRING
+        description: Campaign name
+      - name: account_id
+        data_type: STRING
+        description: Parent account ID
+      - name: ad_network_id
+        data_type: STRING
+        description: Ad platform identifier
+      - name: product_id
+        data_type: STRING
+        description: Associated product ID (from account)
+      - name: organization_id
+        data_type: STRING
+        description: Organization ID (from account)
+
+  - name: adsets
+    description: Unified ad sets/ad groups dimension table across all ad platforms
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: id
+        data_type: STRING
+        description: Unique adset identifier (prefixed with ad_network_id)
+      - name: adset_name
+        data_type: STRING
+        description: Ad set/ad group name
+      - name: campaign_id
+        data_type: STRING
+        description: Parent campaign ID
+      - name: ad_network_id
+        data_type: STRING
+        description: Ad platform identifier
+      - name: account_id
+        data_type: STRING
+        description: Account ID (from campaign)
+      - name: organization_id
+        data_type: STRING
+        description: Organization ID (from campaign)
+      - name: product_id
+        data_type: STRING
+        description: Product ID (from campaign)
+
+  - name: ads
+    description: Unified ads dimension table across all ad platforms
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: id
+        data_type: STRING
+        description: Unique ad identifier (prefixed with ad_network_id)
+      - name: ad_name
+        data_type: STRING
+        description: Ad name
+      - name: adset_id
+        data_type: STRING
+        description: Parent adset ID
+      - name: campaign_id
+        data_type: STRING
+        description: Parent campaign ID
+      - name: creative_id
+        data_type: STRING
+        description: Creative ID (Facebook only, Cortex-specific)
+      - name: ad_network_id
+        data_type: STRING
+        description: Ad platform identifier
+      - name: account_id
+        data_type: STRING
+        description: Account ID (from campaign)
+      - name: organization_id
+        data_type: STRING
+        description: Organization ID (from campaign)
+      - name: product_id
+        data_type: STRING
+        description: Product ID (from campaign)
