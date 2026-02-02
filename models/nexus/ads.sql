@@ -2,6 +2,7 @@
   config(
     materialized='incremental',
     unique_key='id',
+    on_schema_change='fail',
     database=var("bq_project_id"),
     schema=var("bq_dataset_id"),
   )

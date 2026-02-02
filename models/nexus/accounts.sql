@@ -3,6 +3,7 @@
     materialized='incremental',
     unique_key='id',
     merge_update_columns = ['name'],
+    on_schema_change='fail',
     database=var("bq_project_id"),
     schema=var("bq_dataset_id"),
   )
