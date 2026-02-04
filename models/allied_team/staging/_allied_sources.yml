@@ -75,3 +75,23 @@ sources:
             description: Device-based reach from R&F API
           - name: demand_tag_label
             description: Targeting strategy from R&F API
+
+      - name: clearline_reach_frequency
+        description: ClearLine R&F data from dedicated api/v0/reports endpoint
+        columns:
+          - name: demand_tag_id
+            description: ClearLine demand tag ID
+          - name: demand_tag_label
+            description: Targeting strategy name (joins with creative)
+          - name: unique_ips
+            description: Unique users by IP (most reliable for CTV)
+          - name: unique_cookies
+            description: Unique users by cookie
+          - name: unique_devices
+            description: Unique users by device
+          - name: ip_frequency
+            description: Frequency by IP (impressions / unique_ips)
+          - name: cookie_frequency
+            description: Frequency by cookie
+          - name: device_frequency
+            description: Frequency by device
