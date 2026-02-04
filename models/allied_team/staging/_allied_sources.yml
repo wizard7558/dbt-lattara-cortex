@@ -49,3 +49,29 @@ sources:
             description: Unique reach (from ALLIED_SERVICES_CREATIVE_AGG)
           - name: completions
             description: Video completions
+
+      - name: raw_clearline_metrics
+        description: ClearLine CTV data via sync-clearline Edge Function
+        columns:
+          - name: date
+            description: Report date
+          - name: campaign
+            description: Campaign name
+          - name: creative
+            description: Demand tag / line item name
+          - name: impressions
+            description: Number of ad impressions
+          - name: spend
+            description: Spend in USD
+          - name: completions
+            description: Video completions (4th quartile)
+          - name: reach
+            description: Legacy reach (for backward compatibility)
+          - name: ip_reach
+            description: IP-based reach from R&F API (recommended for CTV)
+          - name: cookie_reach
+            description: Cookie-based reach from R&F API
+          - name: device_reach
+            description: Device-based reach from R&F API
+          - name: demand_tag_label
+            description: Targeting strategy from R&F API

@@ -35,7 +35,7 @@ models:
   - name: stg_allied_jamloop
     description: >
       Staged Jamloop (Snowflake source) data for Allied Team WFP campaigns.
-      
+
       KNOWN LIMITATION: Cannot distinguish Premium CTV vs Digital Pre-Roll
       because source data lacks line item granularity. Currently all rows
       default to Premium CTV. Waiting on updated Snowflake export with
@@ -51,6 +51,31 @@ models:
         description: From ALLIED_SERVICES_LLD source
       - name: reach
         description: From ALLIED_SERVICES_CREATIVE_AGG source
+
+  - name: stg_allied_clearline
+    description: >
+      Staged ClearLine CTV data for Allied Team campaigns.
+      Data ingested via sync-clearline Edge Function from ClearLine API.
+      Uses IP-based reach from R&F API (most reliable for CTV devices).
+    columns:
+      - name: date
+        description: Report date
+      - name: platform_source
+        description: Always "ClearLine"
+      - name: partner_platform
+        description: Mapped to "Top Tier CTV/OTT"
+      - name: media_channel
+        description: Mapped to "Premium CTV/OTT Streaming"
+      - name: plan_section
+        description: Targeting strategy from demand_tag_label
+      - name: creative
+        description: Demand tag / line item name
+      - name: ip_reach
+        description: IP-based reach from R&F API (primary for CTV)
+      - name: cookie_reach
+        description: Cookie-based reach from R&F API
+      - name: device_reach
+        description: Device-based reach from R&F API
 
   - name: allied_unified_funnel
     description: >
