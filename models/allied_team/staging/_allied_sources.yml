@@ -13,6 +13,12 @@ sources:
             description: Report date
           - name: campaign_id
             description: Google Ads campaign ID
+          - name: campaign
+            description: Campaign name
+          - name: ad_group_name
+            description: Ad group name
+          - name: advertising_channel_subtype
+            description: Channel subtype (VIDEO_NON_SKIPPABLE_IN_STREAM, VIDEO_OUTSTREAM, etc.)
           - name: impressions
             description: Number of ad impressions
           - name: clicks
