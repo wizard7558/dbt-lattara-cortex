@@ -187,7 +187,7 @@ fivetran_mapped as (
         cast(null as int64) as video_views_75pct,
         cast(null as int64) as video_views_100pct,
         cast(null as int64) as engagements,
-        cast(interactions as int64) as interactions,
+        cast(clicks as int64) as interactions,
 
         -- Reach not available in Google Ads data
         cast(null as int64) as reach,
@@ -207,3 +207,4 @@ combined as (
 )
 
 select * from combined
+order by date desc
