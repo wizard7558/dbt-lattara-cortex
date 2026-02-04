@@ -1,0 +1,27 @@
+# dbt artifacts
+target/
+dbt_packages/
+dbt_modules/
+logs/
+
+# dbt Cloud artifacts
+manifest.json
+graph_summary.json
+semantic_manifest.json
+run_results.json
+catalog.json
+sources.json
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
