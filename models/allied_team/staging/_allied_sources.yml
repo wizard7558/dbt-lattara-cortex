@@ -28,62 +28,6 @@ sources:
           - name: completions
             description: Video completions
 
-  - name: google_ads_allied_team
-    database: res-analytics
-    schema: google_ads_allied_team
-    description: Allied Team Google Ads data via Fivetran direct connector
-    tables:
-      - name: ad_stats
-        description: Ad-level performance metrics
-        columns:
-          - name: date
-            description: Report date
-          - name: campaign_id
-            description: Campaign ID
-          - name: ad_group_id
-            description: Ad group ID
-          - name: ad_id
-            description: Ad ID
-          - name: impressions
-            description: Number of impressions
-          - name: clicks
-            description: Number of clicks
-          - name: cost_micros
-            description: Cost in micros (divide by 1M for dollars)
-          - name: video_trueview_views
-            description: TrueView video views
-          - name: device
-            description: Device type
-      - name: campaign_history
-        description: Campaign metadata history
-        columns:
-          - name: id
-            description: Campaign ID
-          - name: name
-            description: Campaign name
-          - name: advertising_channel_subtype
-            description: Channel subtype (VIDEO_NON_SKIPPABLE, etc.)
-          - name: advertising_channel_type
-            description: Channel type (VIDEO, SEARCH, etc.)
-      - name: ad_group_history
-        description: Ad group metadata history
-        columns:
-          - name: id
-            description: Ad group ID
-          - name: campaign_id
-            description: Parent campaign ID
-          - name: name
-            description: Ad group name
-      - name: ad_history
-        description: Ad metadata history
-        columns:
-          - name: id
-            description: Ad ID
-          - name: ad_group_id
-            description: Parent ad group ID
-          - name: name
-            description: Ad name
-            
       - name: magnite_funnel
         description: Magnite CTV campaign performance data
         columns:
@@ -97,7 +41,7 @@ sources:
             description: Video completions
           - name: reach
             description: Unique reach
-            
+
       - name: snowflake_funnel
         description: Jamloop campaign data via Snowflake
         columns:
@@ -157,3 +101,59 @@ sources:
             description: Frequency by cookie
           - name: device_frequency
             description: Frequency by device
+
+  - name: google_ads_allied_team
+    database: res-analytics
+    schema: google_ads_allied_team
+    description: Allied Team Google Ads data via Fivetran direct connector
+    tables:
+      - name: ad_stats
+        description: Ad-level performance metrics
+        columns:
+          - name: date
+            description: Report date
+          - name: campaign_id
+            description: Campaign ID
+          - name: ad_group_id
+            description: Ad group ID
+          - name: ad_id
+            description: Ad ID
+          - name: impressions
+            description: Number of impressions
+          - name: clicks
+            description: Number of clicks
+          - name: cost_micros
+            description: Cost in micros (divide by 1M for dollars)
+          - name: video_trueview_views
+            description: TrueView video views
+          - name: device
+            description: Device type
+      - name: campaign_history
+        description: Campaign metadata history
+        columns:
+          - name: id
+            description: Campaign ID
+          - name: name
+            description: Campaign name
+          - name: advertising_channel_subtype
+            description: Channel subtype (VIDEO_NON_SKIPPABLE, etc.)
+          - name: advertising_channel_type
+            description: Channel type (VIDEO, SEARCH, etc.)
+      - name: ad_group_history
+        description: Ad group metadata history
+        columns:
+          - name: id
+            description: Ad group ID
+          - name: campaign_id
+            description: Parent campaign ID
+          - name: name
+            description: Ad group name
+      - name: ad_history
+        description: Ad metadata history
+        columns:
+          - name: id
+            description: Ad ID
+          - name: ad_group_id
+            description: Parent ad group ID
+          - name: name
+            description: Ad name
