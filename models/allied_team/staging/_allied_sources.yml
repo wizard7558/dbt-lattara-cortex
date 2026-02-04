@@ -157,3 +157,47 @@ sources:
             description: Parent ad group ID
           - name: name
             description: Ad name
+      - name: youtube_ad_video_metrics
+        description: Ad-level video metrics from custom GAQL report (BigQuery Data Transfer)
+        columns:
+          - name: date
+            description: Report date (segments.date)
+          - name: campaign_id
+            description: Campaign ID
+          - name: campaign_name
+            description: Campaign name
+          - name: ad_group_id
+            description: Ad group ID
+          - name: ad_group_name
+            description: Ad group name (used for targeting breakdown)
+          - name: ad_id
+            description: Ad ID
+          - name: ad_name
+            description: Ad name / creative identifier
+          - name: impressions
+            description: Number of impressions
+          - name: video_views
+            description: Video views (TrueView)
+          - name: video_quartile_p25_rate
+            description: Rate of viewers reaching 25% of video
+          - name: video_quartile_p50_rate
+            description: Rate of viewers reaching 50% of video
+          - name: video_quartile_p75_rate
+            description: Rate of viewers reaching 75% of video
+          - name: video_quartile_p100_rate
+            description: Rate of viewers reaching 100% of video (completion)
+      - name: youtube_campaign_reach
+        description: Campaign-level reach metrics from custom GAQL report (BigQuery Data Transfer)
+        columns:
+          - name: date
+            description: Report date (segments.date)
+          - name: campaign_id
+            description: Campaign ID
+          - name: campaign_name
+            description: Campaign name
+          - name: unique_users
+            description: Unique users reached (92-day max range)
+          - name: average_impression_frequency_per_user
+            description: Average impressions per unique user
+          - name: impressions
+            description: Total campaign impressions
