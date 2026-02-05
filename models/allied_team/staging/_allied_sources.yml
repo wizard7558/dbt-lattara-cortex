@@ -157,11 +157,11 @@ sources:
             description: Parent ad group ID
           - name: name
             description: Ad name
-      - name: youtube_ad_video_metrics
-        description: Ad-level video metrics from custom GAQL report (BigQuery Data Transfer)
+      - name: video_ad_stats
+        description: Ad-level video metrics from Fivetran Google Ads connector
         columns:
           - name: date
-            description: Report date (segments.date)
+            description: Report date
           - name: campaign_id
             description: Campaign ID
           - name: campaign_name
@@ -176,24 +176,24 @@ sources:
             description: Ad name / creative identifier
           - name: impressions
             description: Number of impressions
-          - name: video_views
-            description: Video views (TrueView)
-          - name: video_quartile_p25_rate
-            description: Rate of viewers reaching 25% of video
-          - name: video_quartile_p50_rate
-            description: Rate of viewers reaching 50% of video
-          - name: video_quartile_p75_rate
-            description: Rate of viewers reaching 75% of video
-          - name: video_quartile_p100_rate
+          - name: clicks
+            description: Number of clicks
+          - name: cost_micros
+            description: Cost in micros (divide by 1M for dollars)
+          - name: video_trueview_views
+            description: TrueView video views
+          - name: video_quartile_p_100_rate
             description: Rate of viewers reaching 100% of video (completion)
-      - name: youtube_campaign_reach
-        description: Campaign-level reach metrics from custom GAQL report (BigQuery Data Transfer)
+          - name: engagements
+            description: Number of engagements
+      - name: video_campaign_stats
+        description: Campaign-level video metrics with reach from Fivetran Google Ads connector
         columns:
           - name: date
-            description: Report date (segments.date)
-          - name: campaign_id
+            description: Report date
+          - name: id
             description: Campaign ID
-          - name: campaign_name
+          - name: name
             description: Campaign name
           - name: unique_users
             description: Unique users reached (92-day max range)

@@ -11,9 +11,9 @@
   Joins ad-level video metrics with campaign-level reach to calculate
   estimated reach per creative using engagement-based frequency adjustment.
 
-  Sources:
-  - youtube_ad_video_metrics: Ad-level video quartiles and impressions
-  - youtube_campaign_reach: Campaign-level unique_users and frequency
+  Sources (Fivetran):
+  - video_ad_stats: Ad-level video quartiles, impressions, spend
+  - video_campaign_stats: Campaign-level unique_users and frequency
 
   Reach Estimation Formula:
     engagement_factor = creative_p100_rate / campaign_avg_p100_rate
@@ -31,7 +31,7 @@
   Schema matches ALLIED_UNIFIED_CTE for direct UNION ALL.
 */
 
--- Ad-level video metrics from custom GAQL report
+-- Ad-level video metrics from Fivetran
 with ad_metrics as (
     select
         date,
@@ -42,22 +42,24 @@ with ad_metrics as (
         ad_id,
         ad_name as creative,
         impressions,
-        video_views,
-        video_quartile_p100_rate
-    from {{ source('google_ads_allied_team', 'youtube_ad_video_metrics') }}
+        clicks,
+        cost_micros / 1000000.0 as spend,
+        video_trueview_views as video_views,
+        video_quartile_p_100_rate as video_quartile_p100_rate
+    from {{ source('google_ads_allied_team', 'video_ad_stats') }}
     where date >= current_date() - 365
 ),
 
--- Campaign-level reach from custom GAQL report
+-- Campaign-level reach from Fivetran
 campaign_reach as (
     select
         date,
-        campaign_id,
-        campaign_name,
+        id as campaign_id,
+        name as campaign_name,
         unique_users as campaign_reach,
         average_impression_frequency_per_user as campaign_frequency,
         impressions as campaign_impressions
-    from {{ source('google_ads_allied_team', 'youtube_campaign_reach') }}
+    from {{ source('google_ads_allied_team', 'video_campaign_stats') }}
     where date >= current_date() - 365
 ),
 
@@ -86,6 +88,8 @@ enriched as (
         a.ad_id,
         a.creative,
         a.impressions,
+        a.clicks,
+        a.spend,
         a.video_views,
         a.video_quartile_p100_rate,
         r.campaign_reach,
@@ -170,8 +174,8 @@ final as (
 
         -- Core metrics
         impressions,
-        cast(null as int64) as clicks,  -- Not in video metrics report
-        cast(null as float64) as spend,  -- Not in video metrics report
+        clicks,
+        spend,
         video_views as completions,
 
         -- Reach metrics
