@@ -6,6 +6,7 @@
   - ClearLine data maps to "Premium CTV/OTT Streaming" media channel
   - Partner "Top Tier CTV/OTT" (Magnite/ClearLine aggregated inventory)
   - Frequency calculated as impressions / reach (when reach > 0)
+  - Spend calculated using target CPM: $29.78 * (impressions / 1000)
 */
 
 with source as (
@@ -59,7 +60,8 @@ mapped as (
         -- Core metrics
         s.impressions,
         coalesce(s.clicks, 0) as clicks,
-        s.spend,
+        -- Spend = $29.78 CPM * (impressions / 1000)
+        round(29.78 * s.impressions / 1000, 2) as spend,
         s.completions,
 
         -- Reach (use daily reach, aggregated for frequency calc)
@@ -77,7 +79,7 @@ mapped as (
         s.country,
 
         -- Calculated metrics
-        s.cpm,
+        29.78 as cpm,
         s.fill_rate,
         s.completion_rate as vcr,
 
