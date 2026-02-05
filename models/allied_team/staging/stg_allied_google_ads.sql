@@ -75,6 +75,7 @@ funnel_mapped as (
         views_50_ as video_views_50pct,
         views_75_ as video_views_75pct,
         views_100_ as video_views_100pct,
+        cast(null as float64) as video_quartile_p_100_rate,
         cast(engagements as int64) as engagements,
         cast(interactions as int64) as interactions,
 
@@ -89,6 +90,7 @@ funnel_mapped as (
 ),
 
 -- New Fivetran direct source for CSAH 2026 campaigns
+-- Using video_ad_stats for video quartile metrics
 fivetran_stats as (
     select
         s.date,
@@ -99,9 +101,9 @@ fivetran_stats as (
         s.clicks,
         s.cost_micros,
         s.video_trueview_views,
-        s.device,
+        s.video_quartile_p_100_rate,
         s._fivetran_synced
-    from {{ source('google_ads_allied_team', 'ad_stats') }} s
+    from {{ source('google_ads_allied_team', 'video_ad_stats') }} s
 ),
 
 fivetran_campaigns as (
@@ -123,7 +125,16 @@ fivetran_ad_groups as (
 
 fivetran_joined as (
     select
-        s.*,
+        s.date,
+        s.campaign_id,
+        s.ad_group_id,
+        s.ad_id,
+        s.impressions,
+        s.clicks,
+        s.cost_micros,
+        s.video_trueview_views,
+        s.video_quartile_p_100_rate,
+        s._fivetran_synced,
         c.campaign_name,
         c.advertising_channel_subtype,
         ag.ad_group_name
@@ -169,7 +180,7 @@ fivetran_mapped as (
         campaign_name as campaign,
         ad_group_name,
         cast(null as string) as original_ad_name,
-        device,
+        cast(null as string) as device,  -- Not available in video_ad_stats
 
         -- Metrics
         impressions,
@@ -186,6 +197,7 @@ fivetran_mapped as (
         cast(null as int64) as video_views_50pct,
         cast(null as int64) as video_views_75pct,
         cast(null as int64) as video_views_100pct,
+        video_quartile_p_100_rate,
         cast(null as int64) as engagements,
         cast(clicks as int64) as interactions,
 
