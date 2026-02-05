@@ -20,7 +20,7 @@
 
 -- Legacy Funnel.io source for WFP campaigns
 with funnel_source as (
-    select * from {{ source('allied_team', 'google_ads_funnel') }}
+    select * from {{ source('allied_team', 'video_ad_stats') }}
     where campaign_id in (23202415135, 23198130224, 23211264475)
 ),
 
@@ -69,15 +69,11 @@ funnel_mapped as (
         impressions,
         clicks,
         coalesce(cost, cost_) as spend,
-        completions,
-        video_views,
-        views_25_ as video_views_25pct,
-        views_50_ as video_views_50pct,
-        views_75_ as video_views_75pct,
-        views_100_ as video_views_100pct,
-        cast(null as float64) as video_quartile_p_100_rate,
+        impressions * video_quartile_p_100_rate as completions,
+        impressions as video_views,
+        video_quartile_p_100_rate,
         cast(engagements as int64) as engagements,
-        cast(interactions as int64) as interactions,
+        cast(clicks as int64) as interactions,
 
         -- Reach not available in Google Ads data
         cast(null as int64) as reach,
