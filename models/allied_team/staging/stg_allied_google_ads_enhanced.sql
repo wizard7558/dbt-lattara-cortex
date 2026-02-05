@@ -8,29 +8,25 @@
 /*
   Google Ads (YouTube) Enhanced Staging Model
 
-  Joins ad-level video metrics with campaign-level reach to calculate
-  reach per creative using engagement-weighted scaling.
+  Uses hardcoded frequencies from Google Ads reporting to scale impressions
+  and preserve reach.
 
   Sources (Fivetran):
   - video_ad_stats: Ad-level video quartiles, impressions, spend
-  - video_campaign_stats: Campaign-level unique_users and frequency
 
-  Reach Calculation (engagement-weighted scaling):
-    1. engagement_weight = impressions / (freq * (ad_vcr / avg_vcr))
-    2. total_weight = SUM(engagement_weight) per campaign per day
-    3. reach = campaign_reach * (engagement_weight / total_weight)
+  Calculation Logic:
+    impressions = raw_impressions * frequency (total scaled impressions)
+    reach = raw_impressions (original impressions = unique reach)
+    frequency = hardcoded per targeting type
 
-  Rationale:
-    - Lower VCR creatives get higher reach weight (less engaged users saw fewer ads)
-    - Higher VCR creatives get lower reach weight (more engaged users saw more ads)
-    - SUM(reach) = campaign_reach (rolls up exactly to actual measured reach)
+  Frequency values (from Google Ads campaign reporting):
+    - Beltway targeting: 1.5
+    - Geofence targeting: 1.2
+    - Default: 1.0
 
   Completions Calculation:
-    completions = impressions * video_quartile_p100_rate
+    completions = raw_impressions * video_quartile_p100_rate
     (video_trueview_views is often 0 for non-skippable ads)
-
-  Note: unique_users is only available at campaign level in Google Ads API.
-  Per-creative reach is distributed using engagement-weighted proportions.
 
   Schema matches ALLIED_UNIFIED_CTE for direct UNION ALL.
 */
@@ -45,7 +41,7 @@ with ad_metrics as (
         ad_group_name,
         ad_id,
         ad_name as creative,
-        impressions,
+        impressions as raw_impressions,
         clicks,
         cost_micros / 1000000.0 as spend,
         -- Completions = impressions * video completion rate
@@ -55,52 +51,20 @@ with ad_metrics as (
     where date >= current_date() - 365
 ),
 
--- Campaign-level reach from Fivetran
-campaign_reach as (
-    select
-        date,
-        id as campaign_id,
-        unique_users as campaign_reach,
-        average_impression_frequency_per_user as campaign_freq
-    from {{ source('google_ads_allied_team', 'video_campaign_stats') }}
-    where date >= current_date() - 365
-),
-
--- Calculate weighted average video completion rate per campaign per day
-campaign_avg as (
-    select
-        date,
-        campaign_id,
-        safe_divide(
-            sum(video_quartile_p100_rate * impressions),
-            nullif(sum(impressions), 0)
-        ) as avg_vcr
-    from ad_metrics
-    group by 1, 2
-),
-
--- Join and calculate engagement weights
-with_weights as (
+-- Apply hardcoded frequencies from Google Ads reporting
+with_frequency as (
     select
         a.*,
-        c.avg_vcr,
-        r.campaign_reach,
-        r.campaign_freq,
-        -- Engagement weight: lower VCR = higher reach weight
-        a.impressions / (r.campaign_freq * coalesce(safe_divide(a.video_quartile_p100_rate, c.avg_vcr), 1.0)) as engagement_weight
+        -- Frequency based on ad_group targeting
+        case
+            when lower(ad_group_name) like '%beltway%' then 1.5
+            when lower(ad_group_name) like '%geofence%' then 1.2
+            else 1.0  -- Default fallback
+        end as frequency
     from ad_metrics a
-    left join campaign_avg c on a.date = c.date and a.campaign_id = c.campaign_id
-    left join campaign_reach r on a.date = r.date and a.campaign_id = r.campaign_id
 ),
 
--- Calculate total weight per campaign per day for scaling
-with_totals as (
-    select *,
-           sum(engagement_weight) over (partition by date, campaign_id) as total_weight
-    from with_weights
-),
-
--- Final output with scaled reach
+-- Final output with calculated metrics
 final as (
     select
         -- Date dimension
@@ -123,38 +87,31 @@ final as (
         campaign_name as campaign,
 
         -- Core metrics
-        impressions,
+        -- Impressions = raw * frequency (total impressions)
+        cast(round(raw_impressions * frequency) as int64) as impressions,
         clicks,
         spend,
         completions,
 
-        -- Scaled reach = campaign_reach * (this_ad_weight / total_weight)
-        cast(round(campaign_reach * safe_divide(engagement_weight, total_weight)) as int64) as reach,
+        -- Reach = raw impressions
+        raw_impressions as reach,
 
-        -- Frequency from campaign level
-        coalesce(campaign_freq, 1.0) as frequency,
+        -- Frequency (hardcoded per targeting)
+        frequency,
 
         -- Video completion rate
         video_quartile_p100_rate,
 
-        -- Engagement factor for debugging
-        safe_divide(video_quartile_p100_rate, avg_vcr) as engagement_factor,
-
-        -- Campaign-level metrics for reference
-        campaign_reach,
-        campaign_freq as campaign_frequency,
-        avg_vcr as campaign_avg_p100_rate,
-
         -- Data quality
         case
-            when impressions = 0 then true
+            when raw_impressions = 0 then true
             when video_quartile_p100_rate is null then true
             else false
         end as is_data_quality_issue,
 
-        'engagement-weighted-scaling' as reach_methodology
+        'hardcoded-frequency' as reach_methodology
 
-    from with_totals
+    from with_frequency
 )
 
 select * from final

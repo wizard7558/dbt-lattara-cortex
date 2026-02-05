@@ -19637,3 +19637,41 @@ parsing.
 [0m21:01:46.023778 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b42fe90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b423050>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107339850>]}
 [0m21:01:46.023976 [debug] [MainThread]: Flushing usage events
 [0m21:01:46.363715 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:13:04.991352 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d33cb90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d398cd0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d3bdf90>]}
+
+
+============================== 22:13:04.994837 | 1db91ef6-fc37-406a-aed9-dbf1e45fe1f8 ==============================
+[0m22:13:04.994837 [info ] [MainThread]: Running with dbt=1.11.2
+[0m22:13:04.995160 [debug] [MainThread]: running dbt with arguments {'warn_error': 'None', 'use_colors': 'True', 'log_cache_events': 'False', 'quiet': 'False', 'printer_width': '80', 'target_path': 'None', 'invocation_command': 'dbt run --select stg_allied_google_ads_enhanced', 'write_json': 'True', 'fail_fast': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'debug': 'False', 'profiles_dir': '/Users/riley/.dbt', 'log_format': 'default', 'version_check': 'True', 'log_path': '/Users/riley/Documents/GitHub/dbt-lattara-cortex/logs', 'introspect': 'True', 'send_anonymous_usage_stats': 'True', 'use_experimental_parser': 'False', 'empty': 'False', 'cache_selected_only': 'False', 'indirect_selection': 'eager', 'no_print': 'None', 'static_parser': 'True', 'partial_parse': 'True'}
+[0m22:13:11.734176 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '1db91ef6-fc37-406a-aed9-dbf1e45fe1f8', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11ce8ce50>]}
+[0m22:13:11.848205 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '1db91ef6-fc37-406a-aed9-dbf1e45fe1f8', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c504550>]}
+[0m22:13:11.848661 [info ] [MainThread]: Registered adapter: bigquery=1.11.0
+[0m22:13:12.019017 [debug] [MainThread]: checksum: 3d40d8bbe1bef07db1c24822f2dbfff8bc07f2a48ed4fe2658a40653aec0b54b, vars: {}, profile: , target: , version: 1.11.2
+[0m22:13:12.131392 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 2 files added, 3 files changed.
+[0m22:13:12.132050 [debug] [MainThread]: Partial parsing: added file: analytics://models/allied_team/staging/stg_allied_google_ads_enhanced.sql
+[0m22:13:12.132223 [debug] [MainThread]: Partial parsing: added file: analytics://models/allied_team/staging/stg_allied_clearline.sql
+[0m22:13:12.132807 [debug] [MainThread]: Partial parsing: updated file: analytics://models/allied_team/staging/_allied_sources.yml
+[0m22:13:12.133059 [debug] [MainThread]: Partial parsing: updated file: analytics://models/allied_team/_allied_schema.yml
+[0m22:13:12.133217 [debug] [MainThread]: Partial parsing: updated file: analytics://models/allied_team/staging/stg_allied_google_ads.sql
+[0m22:13:12.269308 [warn ] [MainThread]: [[33mWARNING[0m][MissingArgumentsPropertyInGenericTestDeprecation]: Deprecated
+functionality
+Found top-level arguments to test `accepted_values` defined on
+'stg_allied_google_ads' in package 'analytics'
+(models/allied_team/_allied_schema.yml). Arguments to generic tests should be
+nested under the `arguments` property.
+[0m22:13:12.269681 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'deprecation', 'label': '1db91ef6-fc37-406a-aed9-dbf1e45fe1f8', 'property_': 'warn', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11d149410>]}
+[0m22:13:12.379021 [error] [MainThread]: Encountered an error:
+Compilation Error
+  Model 'model.analytics.stg_allied_google_ads' (models/allied_team/staging/stg_allied_google_ads.sql) depends on a source named 'allied_team.video_ad_stats' which was not found
+[0m22:13:12.379511 [warn ] [MainThread]: [[33mWARNING[0m][DeprecationsSummary]: Deprecated functionality
+Summary of encountered deprecations:
+- MissingArgumentsPropertyInGenericTestDeprecation: 1 occurrence
+To see all deprecation instances instead of just the first occurrence of each,
+run command again with the `--show-all-deprecations` flag. You may also need to
+run with `--no-partial-parse` as some deprecations are only encountered during
+parsing.
+[0m22:13:12.402447 [debug] [MainThread]: Resource report: {"command_name": "run", "command_success": false, "command_wall_clock_time": 7.4531574, "process_in_blocks": "0", "process_kernel_time": 1.990383, "process_mem_max_rss": "404930560", "process_out_blocks": "0", "process_user_time": 3.637819}
+[0m22:13:12.402751 [debug] [MainThread]: Command `dbt run` failed at 22:13:12.402697 after 7.45 seconds
+[0m22:13:12.402978 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d39b490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d399a10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11cf3a890>]}
+[0m22:13:12.403178 [debug] [MainThread]: Flushing usage events
+[0m22:13:12.929926 [debug] [MainThread]: An error was encountered while trying to flush usage events
