@@ -176,7 +176,7 @@ final as (
         impressions,
         clicks,
         spend,
-        video_views as completions,
+        round(impressions * video_quartile_p100_rate,0) as completions,
 
         -- Reach metrics
         estimated_reach as reach,
