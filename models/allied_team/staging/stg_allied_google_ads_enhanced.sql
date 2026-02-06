@@ -8,25 +8,22 @@
 /*
   Google Ads (YouTube) Enhanced Staging Model
 
-  Uses hardcoded frequencies and CPMs from Google Ads reporting to scale
-  impressions and calculate spend.
-
   Sources (Fivetran):
   - video_ad_stats: Ad-level video quartiles, impressions
 
   Calculation Logic:
-    impressions = raw_impressions * frequency (total scaled impressions)
-    reach = raw_impressions (original impressions = unique reach)
+    impressions = Google Ads impressions (already total, not unique)
+    reach = impressions / frequency (approximate unique users)
     spend = target_cpm * (impressions / 1000)
-    frequency = hardcoded per targeting type
+    frequency = hardcoded per targeting type (from Google Ads campaign reporting)
 
   Frequency values (from Google Ads campaign reporting):
-    - Beltway targeting: 1.5, CPM $19.50
-    - Geofence targeting: 1.2, CPM $19.50
+    - Beltway targeting: 1.6, CPM $19.50
+    - Geofence targeting: 1.3, CPM $19.50
     - Default: 1.0, CPM $19.50
 
   Completions Calculation:
-    completions = raw_impressions * video_quartile_p100_rate
+    completions = impressions * video_quartile_p100_rate
     (video_trueview_views is often 0 for non-skippable ads)
 
   Schema matches ALLIED_UNIFIED_CTE for direct UNION ALL.
@@ -42,7 +39,7 @@ with ad_metrics as (
         ad_group_name,
         ad_id,
         ad_name as creative,
-        impressions as raw_impressions,
+        impressions,
         clicks,
         -- Completions = impressions * video completion rate
         cast(round(impressions * coalesce(video_quartile_p_100_rate, 0)) as int64) as completions,
@@ -55,17 +52,13 @@ with ad_metrics as (
 with_targeting as (
     select
         a.*,
-        -- Frequency and CPM based on ad_group targeting
+        -- Frequencies from Google Ads campaign reporting (actual values)
         case
-            when lower(ad_group_name) like '%beltway%' then 1.5
-            when lower(ad_group_name) like '%geofence%' then 1.2
-            else 1.0  -- Default fallback
+            when lower(ad_group_name) like '%beltway%' then 1.6
+            when lower(ad_group_name) like '%geofence%' then 1.3
+            else 1.0
         end as frequency,
-        case
-            when lower(ad_group_name) like '%beltway%' then 19.50
-            when lower(ad_group_name) like '%geofence%' then 19.50
-            else 19.50  -- Default CPM
-        end as target_cpm
+        19.50 as target_cpm
     from ad_metrics a
 ),
 
@@ -79,8 +72,8 @@ final as (
         'Google Ads' as platform_source,
         'Google Youtube' as partner_platform,
 
-        -- Media channel (simplified - use General, let campaign mappings handle display)
-        'General' as media_channel,
+        -- Media channel
+        'YouTube Nonskip Video Ads' as media_channel,
 
         -- Plan section from ad_group_name
         ad_group_name as plan_section,
@@ -92,15 +85,15 @@ final as (
         campaign_name as campaign,
 
         -- Core metrics
-        -- Impressions = raw * frequency (total impressions)
-        cast(round(raw_impressions * frequency) as int64) as impressions,
+        -- Impressions are already total from Google Ads (not unique)
+        impressions,
         clicks,
-        -- Spend = target_cpm * (impressions / 1000) using scaled impressions
-        round(target_cpm * (raw_impressions * frequency) / 1000, 2) as spend,
+        -- Spend = target_cpm * (impressions / 1000)
+        round(target_cpm * impressions / 1000, 2) as spend,
         completions,
 
-        -- Reach = raw impressions
-        raw_impressions as reach,
+        -- Reach = impressions / frequency (approximate unique users)
+        cast(round(impressions / frequency) as int64) as reach,
 
         -- Frequency (hardcoded per targeting)
         frequency,
@@ -113,7 +106,7 @@ final as (
 
         -- Data quality
         case
-            when raw_impressions = 0 then true
+            when impressions = 0 then true
             when video_quartile_p100_rate is null then true
             else false
         end as is_data_quality_issue,
