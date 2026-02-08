@@ -39,7 +39,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install dbt
         run: pip install dbt-bigquery==1.11.0
@@ -64,6 +63,8 @@ jobs:
                 timeout_seconds: 300
                 location: US
           EOF
+          # Fix indentation (heredoc preserves leading spaces from YAML)
+          sed -i 's/^          //' ~/.dbt/profiles.yml
 
       - name: Run dbt
         run: |
