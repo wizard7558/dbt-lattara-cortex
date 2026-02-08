@@ -20,7 +20,7 @@
 
 -- Legacy Funnel.io source for WFP campaigns
 with funnel_source as (
-    select * from {{ source('allied_team', 'video_ad_stats') }}
+    select * from {{ source('allied_team', 'google_ads_funnel') }}
     where campaign_id in (23202415135, 23198130224, 23211264475)
 ),
 
