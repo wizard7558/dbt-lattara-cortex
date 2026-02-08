@@ -69,13 +69,17 @@ funnel_mapped as (
         impressions,
         clicks,
         coalesce(cost, cost_) as spend,
-        impressions * video_quartile_p_100_rate as completions,
-        impressions as video_views,
-        video_quartile_p_100_rate,
+        completions,
+        video_views,
+        cast(views_25_ as int64) as video_views_25pct,
+        cast(views_50_ as int64) as video_views_50pct,
+        cast(views_75_ as int64) as video_views_75pct,
+        cast(views_100_ as int64) as video_views_100pct,
+        cast(null as float64) as video_quartile_p_100_rate,
         cast(engagements as int64) as engagements,
         cast(clicks as int64) as interactions,
 
-        -- Reach not available in Google Ads data
+        -- Reach not available in Funnel.io Google Ads data
         cast(null as int64) as reach,
 
         -- Metadata
@@ -119,6 +123,16 @@ fivetran_ad_groups as (
     from {{ source('google_ads_allied_team', 'ad_group_history') }}
 ),
 
+-- Campaign-level reach from Fivetran Google Ads connector
+fivetran_reach as (
+    select
+        date,
+        id as campaign_id,
+        unique_users as reach,
+        average_impression_frequency_per_user as frequency
+    from {{ source('google_ads_allied_team', 'video_campaign_stats') }}
+),
+
 fivetran_joined as (
     select
         s.date,
@@ -133,10 +147,12 @@ fivetran_joined as (
         s._fivetran_synced,
         c.campaign_name,
         c.advertising_channel_subtype,
-        ag.ad_group_name
+        ag.ad_group_name,
+        r.reach
     from fivetran_stats s
     inner join fivetran_campaigns c on s.campaign_id = c.campaign_id
     left join fivetran_ad_groups ag on s.ad_group_id = ag.ad_group_id
+    left join fivetran_reach r on s.campaign_id = r.campaign_id and s.date = r.date
 ),
 
 fivetran_mapped as (
@@ -197,8 +213,8 @@ fivetran_mapped as (
         cast(null as int64) as engagements,
         cast(clicks as int64) as interactions,
 
-        -- Reach not available in Google Ads data
-        cast(null as int64) as reach,
+        -- Reach from video_campaign_stats (campaign-level, distributed to ad rows)
+        reach,
 
         -- Metadata
         'USD' as currency,
