@@ -1,0 +1,87 @@
+name: dbt run
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_dataset:
+        description: 'Target BigQuery dataset (e.g., cortex, com_acme_cortex)'
+        required: false
+        default: 'cortex'
+      bq_dataset_id:
+        description: 'BigQuery dataset prefix (e.g., cortex, com_acme)'
+        required: false
+        default: 'cortex'
+      organization_id:
+        description: 'Organization ID (for logging)'
+        required: false
+        default: ''
+      triggered_by:
+        description: 'What triggered this run'
+        required: false
+        default: 'manual'
+      models:
+        description: 'dbt model selector (e.g., allied_team, nexus, +mart_kpi_daily)'
+        required: false
+        default: ''
+      full_refresh:
+        description: 'Run with --full-refresh'
+        required: false
+        default: 'false'
+
+jobs:
+  dbt-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dbt
+        run: pip install dbt-bigquery==1.11.0
+
+      - name: Configure GCP credentials
+        run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
+
+      - name: Write profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          default:
+            target: prod
+            outputs:
+              prod:
+                type: bigquery
+                method: service-account
+                project: res-analytics
+                dataset: cortex
+                keyfile: /tmp/gcp-key.json
+                threads: 4
+                timeout_seconds: 300
+                location: US
+          EOF
+
+      - name: Run dbt
+        run: |
+          VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "${{ inputs.bq_dataset_id }}", "organization_id": "${{ inputs.organization_id }}"}'
+
+          CMD="dbt run --vars '${VARS}'"
+
+          if [ -n "${{ inputs.models }}" ]; then
+            CMD="${CMD} --select ${{ inputs.models }}"
+          fi
+
+          if [ "${{ inputs.full_refresh }}" = "true" ]; then
+            CMD="${CMD} --full-refresh"
+          fi
+
+          echo "Running: ${CMD}"
+          eval ${CMD}
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f /tmp/gcp-key.json
