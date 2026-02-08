@@ -56,8 +56,18 @@ sources:
           - name: completions
             description: Video completions
 
+      - name: raw_clearline_metrics_2025
+        description: Archived 2025 ClearLine CTV data (static, not refreshed)
+        columns:
+          - name: date
+            description: Report date
+          - name: campaign
+            description: Campaign name
+          - name: impressions
+            description: Number of ad impressions
+
       - name: raw_clearline_metrics
-        description: ClearLine CTV data via sync-clearline Edge Function
+        description: ClearLine CTV data via sync-clearline Edge Function (2026+, truncated each sync)
         columns:
           - name: date
             description: Report date

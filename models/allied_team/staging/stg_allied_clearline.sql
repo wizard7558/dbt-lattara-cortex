@@ -10,10 +10,11 @@
 */
 
 with source as (
-    -- Table is truncated and fully resynced each run, no dedup needed
-    select *
-    from {{ source('allied_team', 'raw_clearline_metrics') }}
-    where date >= current_date() - 365
+    -- 2026+ data: truncated and fully resynced each run
+    select * from {{ source('allied_team', 'raw_clearline_metrics') }}
+    union all
+    -- 2025 archive: static table, not refreshed
+    select * from {{ source('allied_team', 'raw_clearline_metrics_2025') }}
 ),
 
 -- Aggregate by creative to get total reach per line item
