@@ -9,20 +9,11 @@
   - Spend calculated using target CPM: $29.78 * (impressions / 1000)
 */
 
-with raw as (
-    select
-        *,
-        row_number() over (
-            partition by date, campaign, creative, publisher, device_platform, device_os, country
-            order by ingested_at desc
-        ) as _row_num
+with source as (
+    -- Table is truncated and fully resynced each run, no dedup needed
+    select *
     from {{ source('allied_team', 'raw_clearline_metrics') }}
     where date >= current_date() - 365
-),
-
-source as (
-    select * except(_row_num) from raw
-    where _row_num = 1
 ),
 
 -- Aggregate by creative to get total reach per line item
