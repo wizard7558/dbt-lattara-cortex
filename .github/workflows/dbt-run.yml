@@ -22,7 +22,7 @@ on:
       models:
         description: 'dbt model selector (e.g., allied_team, nexus, +mart_kpi_daily)'
         required: false
-        default: ''
+        default: 'allied_team --exclude allied_internal_report'
       full_refresh:
         description: 'Run with --full-refresh'
         required: false
