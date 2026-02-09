@@ -5,6 +5,10 @@ sources:
     database: res-analytics
     schema: allied_team
     description: Allied Team advertising data from Funnel.io
+    freshness:
+      warn_after: {count: 48, period: hour}
+      error_after: {count: 72, period: hour}
+    loaded_at_field: date
     tables:
       - name: google_ads_funnel
         description: Google Ads (YouTube) campaign performance data (legacy Funnel.io)
@@ -58,6 +62,7 @@ sources:
 
       - name: raw_clearline_metrics_2025
         description: Archived 2025 ClearLine CTV data (static, not refreshed)
+        freshness: null
         columns:
           - name: date
             description: Report date
@@ -94,6 +99,7 @@ sources:
 
       - name: clearline_reach_frequency
         description: ClearLine R&F data from dedicated api/v0/reports endpoint
+        freshness: null
         columns:
           - name: demand_tag_id
             description: ClearLine demand tag ID
@@ -116,6 +122,10 @@ sources:
     database: res-analytics
     schema: google_ads_allied_team
     description: Allied Team Google Ads data via Fivetran direct connector
+    freshness:
+      warn_after: {count: 48, period: hour}
+      error_after: {count: 72, period: hour}
+    loaded_at_field: date
     tables:
       - name: ad_stats
         description: Ad-level performance metrics
@@ -140,6 +150,7 @@ sources:
             description: Device type
       - name: campaign_history
         description: Campaign metadata history
+        freshness: null
         columns:
           - name: id
             description: Campaign ID
@@ -151,6 +162,7 @@ sources:
             description: Channel type (VIDEO, SEARCH, etc.)
       - name: ad_group_history
         description: Ad group metadata history
+        freshness: null
         columns:
           - name: id
             description: Ad group ID
@@ -160,6 +172,7 @@ sources:
             description: Ad group name
       - name: ad_history
         description: Ad metadata history
+        freshness: null
         columns:
           - name: id
             description: Ad ID
