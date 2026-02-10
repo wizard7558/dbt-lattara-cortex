@@ -86,3 +86,46 @@ jobs:
       - name: Cleanup credentials
         if: always()
         run: rm -f /tmp/gcp-key.json
+
+  notify-failure:
+    name: Notify Pipeline Failure
+    runs-on: ubuntu-latest
+    needs: [dbt-run]
+    if: failure()
+    steps:
+      - name: Send Slack notification
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "🚨 dbt run failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🚨 CRITICAL: dbt-run (GitHub Actions)" }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*${{ github.workflow }} #${{ github.run_number }} failed*"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Failed Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    { "type": "mrkdwn", "text": "Branch: `${{ github.ref_name }}` | Triggered by: ${{ github.actor }}" }
+                  ]
+                }
+              ]
+            }'
