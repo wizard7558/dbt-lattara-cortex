@@ -359,8 +359,6 @@ google_performance AS (
   GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
 ),
 
--- TEMP DISABLE Google PMax See Note Below
-{% if false %}
 --------------------------------------------------------------------
 -- Google Performance Max (PMax) - Campaign-level data
 -- PMax campaigns don't have traditional ads/adsets, they use Asset Groups
@@ -533,8 +531,6 @@ google_pmax_performance AS (
 
 -- SELECT * from google_performance
 -- ORDER BY ad_id;
-
-{% endif %}
 
 --------------------------------------------------------------------
 -- Linkedin Performance
@@ -1123,9 +1119,8 @@ all_performance AS (
   UNION ALL
   SELECT * FROM google_performance
   UNION ALL
-  -- TEMP DISABLE Google PMax
-  -- SELECT * FROM google_pmax_performance
-  -- UNION ALL
+  SELECT * FROM google_pmax_performance
+  UNION ALL
   SELECT * FROM linkedin_performance
   UNION ALL
   SELECT * FROM tiktok_performance
