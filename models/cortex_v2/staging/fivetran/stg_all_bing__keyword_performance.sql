@@ -14,6 +14,9 @@
  * Note: Bing uses keyword-level reporting, so ad_id is replaced with keyword_id.
  */
 
+{% set schemas = get_customer_schemas('MICROSOFT_ADS') %}
+{% if schemas | length > 0 %}
+
 WITH unioned AS (
   {{ union_all_schemas('MICROSOFT_ADS', 'keyword_performance_daily_report') }}
 ),
@@ -50,3 +53,25 @@ transformed AS (
 )
 
 SELECT * FROM transformed
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS keyword_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(0 AS INT64) AS impressions,
+  CAST(0 AS INT64) AS clicks,
+  CAST(0 AS INT64) AS link_clicks,
+  CAST(0 AS FLOAT64) AS spend,
+  CAST(0 AS FLOAT64) AS conversions,
+  CAST(0 AS FLOAT64) AS conversion_value,
+  CAST('MICROSOFT_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

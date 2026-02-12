@@ -12,6 +12,9 @@
  * Fivetran schemas, adding user_id extracted from the schema name pattern.
  */
 
+{% set schemas = get_customer_schemas('TIKTOK_ADS') %}
+{% if schemas | length > 0 %}
+
 WITH unioned AS (
   {{ union_all_schemas('TIKTOK_ADS', 'ad_report_daily') }}
 ),
@@ -48,3 +51,25 @@ transformed AS (
 )
 
 SELECT * FROM transformed
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS ad_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(0 AS INT64) AS impressions,
+  CAST(0 AS INT64) AS clicks,
+  CAST(0 AS INT64) AS link_clicks,
+  CAST(0 AS FLOAT64) AS spend,
+  CAST(0 AS FLOAT64) AS conversions,
+  CAST(0 AS FLOAT64) AS conversion_value,
+  CAST('TIKTOK_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

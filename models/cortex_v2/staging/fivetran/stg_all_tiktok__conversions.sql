@@ -18,6 +18,9 @@
  * This staging model unpivots these columns to rows for unified format.
  */
 
+{% set schemas = get_customer_schemas('TIKTOK_ADS') %}
+{% if schemas | length > 0 %}
+
 WITH unioned AS (
   {{ union_all_schemas('TIKTOK_ADS', 'ad_report_daily') }}
 ),
@@ -162,3 +165,22 @@ unified AS (
 )
 
 SELECT * FROM unified
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS ad_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(NULL AS STRING) AS event_name,
+  CAST(0 AS FLOAT64) AS event_count,
+  CAST(0 AS FLOAT64) AS event_value,
+  CAST('TIKTOK_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

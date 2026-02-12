@@ -21,7 +21,7 @@ sources:
       - name: ad_set_history
       - name: ad_history
       - name: ads_insights
-        loaded_at_field: date_start
+        loaded_at_field: date
         freshness:
           warn_after: {count: 48, period: hour}
           error_after: {count: 72, period: hour}

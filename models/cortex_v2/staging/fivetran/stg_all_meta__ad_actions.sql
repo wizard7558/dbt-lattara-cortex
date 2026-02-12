@@ -21,6 +21,22 @@
  * - offsite_conversion.fb_pixel_* -> Custom conversion (keep original name)
  */
 
+{#- Check if any schema has the basic_ad_actions table -#}
+{% set schemas = get_customer_schemas('META_ADS') %}
+{% set ns = namespace(has_table=false) %}
+{% if schemas | length > 0 and execute %}
+  {% for schema in schemas %}
+    {% if not ns.has_table %}
+      {% set rel = adapter.get_relation(database=var('gcp_project'), schema=schema, identifier='basic_ad_actions') %}
+      {% if rel is not none %}
+        {% set ns.has_table = true %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if ns.has_table %}
+
 WITH unioned AS (
   {{ union_all_schemas('META_ADS', 'basic_ad_actions') }}
 ),
@@ -78,3 +94,26 @@ transformed AS (
 )
 
 SELECT * FROM transformed
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS ad_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(NULL AS STRING) AS action_type,
+  CAST(NULL AS STRING) AS event_name,
+  CAST(0 AS FLOAT64) AS event_count,
+  CAST(0 AS FLOAT64) AS event_count_1d_click,
+  CAST(0 AS FLOAT64) AS event_count_7d_click,
+  CAST(0 AS FLOAT64) AS event_value_1d,
+  CAST(0 AS FLOAT64) AS event_value_7d,
+  CAST('META_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

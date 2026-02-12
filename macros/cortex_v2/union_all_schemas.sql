@@ -21,11 +21,8 @@
   {% if schemas | length == 0 %}
     {#- Return empty result during parse or if no schemas exist -#}
     SELECT
-      CAST(NULL AS STRING) AS source_schema,
-      CAST(NULL AS STRING) AS user_id,
-      *
-    FROM `{{ var('gcp_project') }}.cortex_placeholder.{{ table_name }}`
-    WHERE 1=0
+      CAST(NULL AS STRING) AS source_schema
+    WHERE FALSE
   {% else %}
     {% for schema in schemas %}
       SELECT
@@ -62,10 +59,8 @@
     {#- Return empty result during parse or if no schemas exist -#}
     SELECT
       CAST(NULL AS STRING) AS source_schema,
-      CAST(NULL AS STRING) AS user_id,
-      *
-    FROM `{{ var('gcp_project') }}.cortex_placeholder.{{ table_name }}`
-    WHERE 1=0
+      CAST(NULL AS STRING) AS user_id
+    WHERE FALSE
   {% else %}
     {% for schema in schemas %}
       SELECT
@@ -120,10 +115,8 @@
     SELECT
       CAST(NULL AS STRING) AS source_schema,
       CAST(NULL AS STRING) AS user_id,
-      CAST(NULL AS STRING) AS source_platform,
-      *
-    FROM `{{ var('gcp_project') }}.cortex_placeholder.{{ table_name }}`
-    WHERE 1=0
+      CAST(NULL AS STRING) AS source_platform
+    WHERE FALSE
   {% else %}
     {{ all_platform_queries | join('\nUNION ALL\n') }}
   {% endif %}

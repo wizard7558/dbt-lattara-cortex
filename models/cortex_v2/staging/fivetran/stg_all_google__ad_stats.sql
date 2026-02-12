@@ -27,7 +27,7 @@ transformed AS (
     CAST(customer_id AS STRING) AS account_id,
     CAST(campaign_id AS STRING) AS campaign_id,
     CAST(ad_group_id AS STRING) AS adset_id,  -- Normalize to adset_id
-    CAST(criterion_id AS STRING) AS ad_id,  -- keyword criterion_id as ad_id equivalent
+    CAST(ad_group_criterion_criterion_id AS STRING) AS ad_id,  -- keyword criterion_id as ad_id equivalent
 
     -- Date
     CAST(date AS DATE) AS date,

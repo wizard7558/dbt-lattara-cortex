@@ -22,6 +22,9 @@
  * This staging model unpivots conversion columns to rows for unified format.
  */
 
+{% set schemas = get_customer_schemas('LINKEDIN_ADS') %}
+{% if schemas | length > 0 %}
+
 WITH unioned AS (
   {{ union_all_schemas('LINKEDIN_ADS', 'ad_analytics_by_creative') }}
 ),
@@ -122,3 +125,22 @@ unified AS (
 )
 
 SELECT * FROM unified
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS ad_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(NULL AS STRING) AS event_name,
+  CAST(0 AS FLOAT64) AS event_count,
+  CAST(0 AS FLOAT64) AS event_value,
+  CAST('LINKEDIN_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

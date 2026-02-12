@@ -21,6 +21,22 @@
  * - Others use conversion_action.name as event_name
  */
 
+{#- Check if any schema has the campaign_conversion_action_stats table -#}
+{% set schemas = get_customer_schemas('GOOGLE_ADS') %}
+{% set ns = namespace(has_table=false) %}
+{% if schemas | length > 0 and execute %}
+  {% for schema in schemas %}
+    {% if not ns.has_table %}
+      {% set rel = adapter.get_relation(database=var('gcp_project'), schema=schema, identifier='campaign_conversion_action_stats') %}
+      {% if rel is not none %}
+        {% set ns.has_table = true %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if ns.has_table %}
+
 WITH conversion_stats_unioned AS (
   {{ union_all_schemas('GOOGLE_ADS', 'campaign_conversion_action_stats') }}
 ),
@@ -82,3 +98,23 @@ joined AS (
 )
 
 SELECT * FROM joined
+
+{% else %}
+
+SELECT
+  CAST(NULL AS STRING) AS user_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS DATE) AS date,
+  CAST(NULL AS STRING) AS conversion_action_id,
+  CAST(NULL AS STRING) AS conversion_action_name,
+  CAST(NULL AS STRING) AS conversion_category,
+  CAST(NULL AS STRING) AS event_name,
+  CAST(0 AS FLOAT64) AS event_count,
+  CAST(0 AS FLOAT64) AS event_value,
+  CAST('GOOGLE_ADS' AS STRING) AS platform,
+  CAST(NULL AS STRING) AS source_schema,
+  CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
+WHERE FALSE
+
+{% endif %}

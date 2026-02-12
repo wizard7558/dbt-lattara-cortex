@@ -28,7 +28,7 @@ transformed AS (
     CAST(ad_id AS STRING) AS ad_id,
 
     -- Date
-    CAST(date_start AS DATE) AS date,
+    CAST(date AS DATE) AS date,
 
     -- Metrics
     COALESCE(impressions, 0) AS impressions,
@@ -43,7 +43,7 @@ transformed AS (
     CURRENT_TIMESTAMP() AS _dbt_loaded_at
 
   FROM unioned
-  WHERE date_start IS NOT NULL
+  WHERE date IS NOT NULL
 )
 
 SELECT * FROM transformed
