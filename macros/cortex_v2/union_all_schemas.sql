@@ -22,7 +22,7 @@
     {#- Return empty result during parse or if no schemas exist -#}
     SELECT
       CAST(NULL AS STRING) AS source_schema
-    WHERE FALSE
+    FROM (SELECT 1) WHERE FALSE
   {% else %}
     {% for schema in schemas %}
       SELECT
@@ -60,7 +60,7 @@
     SELECT
       CAST(NULL AS STRING) AS source_schema,
       CAST(NULL AS STRING) AS user_id
-    WHERE FALSE
+    FROM (SELECT 1) WHERE FALSE
   {% else %}
     {% for schema in schemas %}
       SELECT
@@ -116,7 +116,7 @@
       CAST(NULL AS STRING) AS source_schema,
       CAST(NULL AS STRING) AS user_id,
       CAST(NULL AS STRING) AS source_platform
-    WHERE FALSE
+    FROM (SELECT 1) WHERE FALSE
   {% else %}
     {{ all_platform_queries | join('\nUNION ALL\n') }}
   {% endif %}

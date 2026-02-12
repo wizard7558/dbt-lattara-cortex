@@ -24,7 +24,7 @@ transformed AS (
     -- IDs
     CAST(account_id AS STRING) AS account_id,
     CAST(campaign_id AS STRING) AS campaign_id,
-    CAST(ad_set_id AS STRING) AS adset_id,
+    CAST(adset_id AS STRING) AS adset_id,
     CAST(ad_id AS STRING) AS ad_id,
 
     -- Date

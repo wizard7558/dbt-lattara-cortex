@@ -114,6 +114,6 @@ SELECT
   CAST('META_ADS' AS STRING) AS platform,
   CAST(NULL AS STRING) AS source_schema,
   CAST(NULL AS TIMESTAMP) AS _dbt_loaded_at
-WHERE FALSE
+FROM (SELECT 1) WHERE FALSE
 
 {% endif %}
