@@ -30,19 +30,19 @@ inputs AS (
 -- Facebook Performance
 --------------------------------------------------------------------
 
-{% set facebook_basic_ad = adapter.get_relation(
+{% set facebook_ads_insights = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
-      identifier="basic_ad"
+      schema=var("source_facebook_dataset"),
+      identifier="ads_insights"
 ) %}
 facebook_dates AS (
-  {% if facebook_basic_ad is not none %}
+  {% if facebook_ads_insights is not none %}
   SELECT
     inputs.at_date,
     ad_id,
     MIN(CAST(date AS DATE)) AS earliest_date,
     LEAST(MAX(CAST(date AS DATE)), inputs.at_date) AS latest_date
-  FROM {{ facebook_basic_ad }}
+  FROM {{ facebook_ads_insights }}
   CROSS JOIN inputs
   GROUP BY ad_id, inputs.at_date
   {% else %}
@@ -55,19 +55,19 @@ facebook_dates AS (
   {% endif %}
 ),
 
-{% set facebook_basic_ad_actions = adapter.get_relation(
+{% set facebook_ads_insights_actions = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
-      identifier="basic_ad_actions"
+      schema=var("source_facebook_dataset"),
+      identifier="ads_insights_actions"
 ) %}
 facebook_conversion_names AS (
-  {% if facebook_basic_ad_actions is not none %}
+  {% if facebook_ads_insights_actions is not none %}
   SELECT
     CAST(date AS DATE) AS date,
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_count
-  FROM {{ facebook_basic_ad_actions }}
+  FROM {{ facebook_ads_insights_actions }}
   GROUP BY date, ad_id, action_type
   {% else %}
   SELECT
@@ -79,19 +79,19 @@ facebook_conversion_names AS (
   {% endif %}
 ),
 
-{% set facebook_basic_ad_action_values = adapter.get_relation(
+{% set facebook_ads_insights_action_values = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
-      identifier="basic_ad_action_values"
+      schema=var("source_facebook_dataset"),
+      identifier="ads_insights_action_values"
 ) %}
 facebook_conversion_values AS (
-  {% if facebook_basic_ad_action_values is not none %}
+  {% if facebook_ads_insights_action_values is not none %}
   SELECT
     CAST(date AS DATE) AS date,
     CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
     action_type AS conversion_name,
     SUM(CAST(value AS FLOAT64)) AS conversion_value
-  FROM {{ facebook_basic_ad_action_values }}
+  FROM {{ facebook_ads_insights_action_values }}
   GROUP BY date, ad_id, action_type
   {% else %}
   SELECT
@@ -118,41 +118,26 @@ facebook_conversions AS (
 ),
 
 
-{% set facebook_ad_history = adapter.get_relation(
-      database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
-      identifier="ad_history"
-) %}
 facebook_base AS (
-  {% if facebook_basic_ad is not none and facebook_ad_history is not none %}
+  {% if facebook_ads_insights is not none %}
   SELECT
     CAST(fb.date AS DATE) AS date,
     fd.earliest_date,
     fd.latest_date,
     CONCAT('facebook_ads_', CAST(fb.ad_id AS STRING)) AS ad_id,
-    CONCAT('facebook_ads_', CAST(ah.ad_set_id AS STRING)) AS adset_id,
-    CONCAT('facebook_ads_', CAST(ah.campaign_id AS STRING)) AS campaign_id,
+    CONCAT('facebook_ads_', CAST(fb.adset_id AS STRING)) AS adset_id,
+    CONCAT('facebook_ads_', CAST(fb.campaign_id AS STRING)) AS campaign_id,
     CONCAT('facebook_ads_', CAST(fb.account_id AS STRING)) AS account_id,
 
     COALESCE(fb.spend, 0) as spend,
     COALESCE(fb.impressions, 0) as impressions,
     COALESCE(fb.inline_link_clicks, 0) AS clicks
-  FROM {{facebook_basic_ad }} fb
+  FROM {{ facebook_ads_insights }} fb
   CROSS JOIN inputs
-  INNER JOIN (
-    SELECT
-      id,
-      ad_set_id,
-      campaign_id,
-      ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_time DESC) AS rn
-    FROM {{ facebook_ad_history }}
-  ) ah
-    ON CAST(fb.ad_id AS INT64) = ah.id
-    AND ah.rn = 1
   INNER JOIN facebook_dates fd
     ON fb.ad_id = fd.ad_id
     AND fd.at_date = inputs.at_date
-  WHERE date = inputs.at_date
+  WHERE CAST(fb.date AS DATE) = inputs.at_date
   {% else %}
   SELECT
     CAST(NULL AS DATE) as date,
