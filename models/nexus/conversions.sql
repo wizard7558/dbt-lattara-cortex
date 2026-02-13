@@ -11,7 +11,7 @@ WITH
 
 {% set google_keyword_conversions = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="keyword_conversions"
 ) %}
 google_conv AS (
@@ -36,12 +36,12 @@ google_conv AS (
 
 {% set facebook_basic_ad_actions = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
+      schema=var("source_facebook_dataset"),
       identifier="basic_ad_actions"
 ) %}
 {% set facebook_basic_ad = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
+      schema=var("source_facebook_dataset"),
       identifier="basic_ad"
 ) %}
 
@@ -97,7 +97,7 @@ facebook_conv AS (
 
 {% set linkedin_conversion_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="conversion_history"
 ) %}
 linkedin_conv as (
@@ -121,12 +121,12 @@ linkedin_conv as (
 
 {% set tiktok_ad_report_hourly = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="ad_report_hourly"
 ) %}
 {% set tiktok_ad_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="ad_history"
 ) %}
 tiktok_conv as (
@@ -166,7 +166,7 @@ FROM (SELECT 1) WHERE FALSE
 
 {% set bing_destination_url_performance_daily_report = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_bing_ads",
+      schema=var("source_bingads_dataset"),
       identifier="destination_url_performance_daily_report"
 ) %}
 bing_conv as (

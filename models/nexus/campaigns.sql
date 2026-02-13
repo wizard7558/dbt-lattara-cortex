@@ -10,7 +10,7 @@
 
 {% set facebook_campaign_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
+      schema=var("source_facebook_dataset"),
       identifier="campaign_history"
 ) %}
 WITH facebook_campaign_latest AS (
@@ -33,7 +33,7 @@ WITH facebook_campaign_latest AS (
 
 {% set facebook_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
+      schema=var("source_facebook_dataset"),
       identifier="account_history"
 ) %}
 facebook_account_latest AS (
@@ -66,7 +66,7 @@ facebook_campaigns AS (
 
 {% set google_campaign_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="campaign_history"
 ) %}
 google_campaign_latest AS (
@@ -90,7 +90,7 @@ google_campaign_latest AS (
 
 {% set google_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="account_history"
 ) %}
 google_account_latest AS (
@@ -127,7 +127,7 @@ google_campaigns AS (
 
 {% set linkedin_campaign_group_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="campaign_group_history"
 ) %}
 linkedin_campaign_group_latest AS (
@@ -150,7 +150,7 @@ linkedin_campaign_group_latest AS (
 
 {% set linkedin_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="account_history"
 ) %}
 linkedin_account_latest AS (
@@ -183,7 +183,7 @@ linkedin_campaigns AS (
 
 {% set tiktok_campaign_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="campaign_history"
 ) %}
 tiktok_campaign_latest AS (
@@ -206,7 +206,7 @@ tiktok_campaign_latest AS (
 
 {% set tiktok_advertiser = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="advertiser"
 ) %}
 tiktok_account_latest AS (

@@ -11,7 +11,7 @@
 
 {% set facebook_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_facebook_ads",
+      schema=var("source_facebook_dataset"),
       identifier="account_history"
 ) %}
 WITH facebook_latest AS (
@@ -32,7 +32,7 @@ WITH facebook_latest AS (
 
 {% set google_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="account_history"
 ) %}
 google_latest AS (
@@ -55,7 +55,7 @@ google_latest AS (
 
 {% set linkedin_account_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="account_history"
 ) %}
 linkedin_latest AS (
@@ -77,7 +77,7 @@ linkedin_latest AS (
 
 {% set tiktok_advertiser = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="advertiser"
 ) %}
 tiktok_latest AS (

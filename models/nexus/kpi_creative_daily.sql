@@ -217,7 +217,7 @@ facebook_performance AS (
 
 {% set google_ad_stats = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="ad_stats"
 ) %}
 
@@ -243,7 +243,7 @@ google_dates AS (
 
 {% set google_ads_conversions = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="ads_conversions"
 ) %}
 google_conversions AS (
@@ -367,7 +367,7 @@ google_performance AS (
 
 {% set google_campaign_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="campaign_history"
 ) %}
 google_pmax_campaign_ids AS (
@@ -385,7 +385,7 @@ google_pmax_campaign_ids AS (
 
 {% set google_campaign_stats = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="campaign_stats"
 ) %}
 google_pmax_dates AS (
@@ -411,7 +411,7 @@ google_pmax_dates AS (
 
 {% set google_campaign_conversions = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_google_ads",
+      schema=var("source_google_dataset"),
       identifier="campaign_conversions"
 ) %}
 google_pmax_conversions AS (
@@ -540,7 +540,7 @@ google_pmax_performance AS (
 
 {% set linkedin_ad_analytics_by_creative = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="ad_analytics_by_creative"
 ) %}
 linkedin_dates AS (
@@ -566,12 +566,12 @@ linkedin_dates AS (
 -- Conversion data from breakdown table joined with conversion_history for names
 {% set linkedin_ad_analytics_by_creative_with_conversion_breakdown = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="ad_analytics_by_creative_with_conversion_breakdown"
 ) %}
 {% set linkedin_conversion_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="conversion_history"
 ) %}
 linkedin_conversions AS (
@@ -602,12 +602,12 @@ linkedin_conversions AS (
 
 {% set linkedin_campaign_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="campaign_history"
 ) %}
 {% set linkedin_creative_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_linkedin_ads",
+      schema=var("source_linkedin_dataset"),
       identifier="creative_history"
 ) %}
 
@@ -730,7 +730,7 @@ linkedin_performance AS (
 
 {% set tiktok_ad_report_hourly = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="ad_report_hourly"
 ) %}
 tiktok_dates AS (
@@ -837,7 +837,7 @@ tiktok_conversions AS (
 
 {% set tiktok_ad_history = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_tiktok_ads",
+      schema=var("source_tiktok_dataset"),
       identifier="ad_history"
 ) %}
 tiktok_base AS (
@@ -953,7 +953,7 @@ tiktok_performance AS (
 --------------------------------------------------------------------
 {% set bing_ad_performance_daily_report = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_bing_ads",
+      schema=var("source_bingads_dataset"),
       identifier="ad_performance_daily_report"
 ) %}
 bing_dates AS (
@@ -979,7 +979,7 @@ bing_dates AS (
 -- Ad-level conversions with goal names (same pattern as Google's ads_conversions)
 {% set bing_destination_url_performance_daily_report = adapter.get_relation(
       database=var("bq_project_id"),
-      schema=var("bq_dataset_id") ~ "_bing_ads",
+      schema=var("source_bingads_dataset"),
       identifier="destination_url_performance_daily_report"
 ) %}
 bing_conversions AS (
