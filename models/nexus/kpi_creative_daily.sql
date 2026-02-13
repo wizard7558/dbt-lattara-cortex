@@ -428,7 +428,7 @@ google_pmax_conversions AS (
   GROUP BY cc.date, cc.id, cc.conversion_action_name
   {% else %}
   SELECT
-    CAST(NULL AS DATE) as at_date,
+    CAST(NULL AS DATE) as date,
     CAST(NULL AS STRING) as ad_id,
     CAST(NULL AS STRING) as conversion_name,
     CAST(NULL AS FLOAT64) as conversion_count,

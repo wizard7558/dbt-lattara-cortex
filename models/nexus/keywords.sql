@@ -8,15 +8,30 @@
 -- Keywords dimension table (Google Ads only for now)
 -- Keywords are stored in ad_group_criterion_history with type = 'KEYWORD'
 
+{% set google_ad_group_criterion_history = adapter.get_relation(
+      database=var("bq_project_id"),
+      schema=var("source_google_dataset"),
+      identifier="ad_group_criterion_history"
+) %}
 WITH google_keyword_latest AS (
+  {% if google_ad_group_criterion_history is not none %}
   SELECT
     id AS criterion_id,
     ad_group_id,
     keyword_text,
     keyword_match_type,
     ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) AS rn
-  FROM {{ source('google_ads_v2', 'ad_group_criterion_history') }}
+  FROM {{ google_ad_group_criterion_history }}
   WHERE type = 'KEYWORD'
+  {% else %}
+  SELECT
+    CAST(NULL AS STRING) AS criterion_id,
+    CAST(NULL AS STRING) AS ad_group_id,
+    CAST(NULL AS STRING) AS keyword_text,
+    CAST(NULL AS STRING) AS keyword_match_type,
+    CAST(NULL AS INT64) AS rn
+  FROM (SELECT 1) WHERE FALSE
+  {% endif %}
 ),
 
 google_keywords AS (

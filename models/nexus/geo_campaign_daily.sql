@@ -59,7 +59,13 @@
 --     WHERE country IS NOT NULL
 -- ),
 
+{% set google_country_campaign_report = adapter.get_relation(
+      database=var("bq_project_id"),
+      schema=var("source_google_dataset"),
+      identifier="country_campaign_report"
+) %}
 with google_geo AS (
+    {% if google_country_campaign_report is not none %}
     SELECT
         date AS date,
         CONCAT('google_ads_', CAST(campaign_id AS STRING)) AS campaign_id,
@@ -69,10 +75,22 @@ with google_geo AS (
         COALESCE(clicks, 0) AS clicks,
         COALESCE(all_conversions, 0) AS conversions,
         FALSE AS is_estimated
-    FROM {{ source('google_ads_v2', 'country_campaign_report') }} g
+    FROM {{ google_country_campaign_report }} g
     LEFT JOIN {{ ref('google_geo_targets') }} gt
         ON g.country_criterion_id = gt.criterion_id
     WHERE gt.country_code IS NOT NULL
+    {% else %}
+    SELECT
+        CAST(NULL AS DATE) AS date,
+        CAST(NULL AS STRING) AS campaign_id,
+        CAST(NULL AS STRING) AS country_code,
+        CAST(NULL AS FLOAT64) AS spend,
+        CAST(NULL AS INT64) AS impressions,
+        CAST(NULL AS INT64) AS clicks,
+        CAST(NULL AS FLOAT64) AS conversions,
+        FALSE AS is_estimated
+    FROM (SELECT 1) WHERE FALSE
+    {% endif %}
 ),
 
 -- -- LinkedIn: Monthly geo data distributed to daily estimates using WEIGHTED distribution
