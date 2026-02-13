@@ -27,6 +27,26 @@ on:
         description: 'Run with --full-refresh'
         required: false
         default: 'false'
+      source_google_dataset:
+        description: 'Google Ads source dataset (e.g., cortex_cmknnba6_googleads)'
+        required: false
+        default: ''
+      source_facebook_dataset:
+        description: 'Facebook/Meta Ads source dataset (e.g., cortex_cmknnba6_metaads)'
+        required: false
+        default: ''
+      source_linkedin_dataset:
+        description: 'LinkedIn Ads source dataset'
+        required: false
+        default: ''
+      source_tiktok_dataset:
+        description: 'TikTok Ads source dataset'
+        required: false
+        default: ''
+      source_bingads_dataset:
+        description: 'Bing/Microsoft Ads source dataset'
+        required: false
+        default: ''
 
 jobs:
   dbt-run:
@@ -68,15 +88,27 @@ jobs:
 
       - name: Run dbt
         run: |
-          # Build vars JSON — derive per-org source dataset names from bq_dataset_id
+          # Build vars JSON with source dataset overrides
           BQ_DS="${{ inputs.bq_dataset_id }}"
-          if [ "$BQ_DS" != "cortex" ] && [ -n "$BQ_DS" ]; then
-            # Per-org run: Fivetran datasets follow {org_prefix}_{platform} naming
-            VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "'"$BQ_DS"'", "organization_id": "${{ inputs.organization_id }}", "source_facebook_dataset": "'"${BQ_DS}_facebook_ads"'", "source_google_dataset": "'"${BQ_DS}_google_ads"'", "source_linkedin_dataset": "'"${BQ_DS}_linkedin_ads"'", "source_tiktok_dataset": "'"${BQ_DS}_tiktok_ads"'", "source_bingads_dataset": "'"${BQ_DS}_bing_ads"'"}'
-          else
-            # Default/legacy run: use dbt_project.yml defaults
-            VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "'"$BQ_DS"'", "organization_id": "${{ inputs.organization_id }}"}'
-          fi
+
+          # Start with base vars
+          VARS_BASE='"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "'"$BQ_DS"'", "organization_id": "${{ inputs.organization_id }}"'
+
+          # Add source dataset overrides (explicit inputs take priority)
+          SOURCE_VARS=""
+          GOOGLE="${{ inputs.source_google_dataset }}"
+          FACEBOOK="${{ inputs.source_facebook_dataset }}"
+          LINKEDIN="${{ inputs.source_linkedin_dataset }}"
+          TIKTOK="${{ inputs.source_tiktok_dataset }}"
+          BINGADS="${{ inputs.source_bingads_dataset }}"
+
+          [ -n "$GOOGLE" ] && SOURCE_VARS="${SOURCE_VARS}, \"source_google_dataset\": \"${GOOGLE}\""
+          [ -n "$FACEBOOK" ] && SOURCE_VARS="${SOURCE_VARS}, \"source_facebook_dataset\": \"${FACEBOOK}\""
+          [ -n "$LINKEDIN" ] && SOURCE_VARS="${SOURCE_VARS}, \"source_linkedin_dataset\": \"${LINKEDIN}\""
+          [ -n "$TIKTOK" ] && SOURCE_VARS="${SOURCE_VARS}, \"source_tiktok_dataset\": \"${TIKTOK}\""
+          [ -n "$BINGADS" ] && SOURCE_VARS="${SOURCE_VARS}, \"source_bingads_dataset\": \"${BINGADS}\""
+
+          VARS="{${VARS_BASE}${SOURCE_VARS}}"
 
           CMD="dbt run --vars '${VARS}'"
 
