@@ -13,6 +13,41 @@
 -- KPI Keyword Daily: Daily keyword-level performance metrics with KPI mapping
 -- Currently Google Ads only (keywords are specific to search campaigns)
 
+{% set google_keyword_stats = adapter.get_relation(
+      database=var("bq_project_id"),
+      schema=var("source_google_dataset"),
+      identifier="keyword_stats"
+) %}
+
+{% if google_keyword_stats is none %}
+-- Google Ads dataset not available for this org - return empty result
+SELECT
+  CAST(NULL AS DATE) AS date,
+  CAST(NULL AS DATE) AS earliest_date,
+  CAST(NULL AS DATE) AS latest_date,
+  CAST(NULL AS STRING) AS organization_id,
+  CAST(NULL AS STRING) AS product_id,
+  CAST(NULL AS STRING) AS ad_network_id,
+  CAST(NULL AS STRING) AS account_id,
+  CAST(NULL AS STRING) AS campaign_id,
+  CAST(NULL AS STRING) AS campaign_name,
+  CAST(NULL AS STRING) AS adset_id,
+  CAST(NULL AS STRING) AS adset_name,
+  CAST(NULL AS STRING) AS keyword_id,
+  CAST(NULL AS STRING) AS keyword_name,
+  CAST(NULL AS STRING) AS match_type,
+  CAST(NULL AS FLOAT64) AS spend,
+  CAST(NULL AS INT64) AS impressions,
+  CAST(NULL AS INT64) AS clicks,
+  {% for i in range(1, 11) %}
+  CAST(NULL AS STRING) AS kpi_{{ i }}_name,
+  CAST(NULL AS FLOAT64) AS kpi_{{ i }}_count,
+  CAST(NULL AS FLOAT64) AS kpi_{{ i }}_value{{ "," if not loop.last else "" }}
+  {% endfor %}
+FROM (SELECT 1) WHERE FALSE
+
+{% else %}
+
 WITH
 inputs AS (
   SELECT at_date
@@ -321,3 +356,5 @@ final AS (
 
 SELECT *
 FROM final
+
+{% endif %}
