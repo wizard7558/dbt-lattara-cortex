@@ -13,6 +13,11 @@
 -- KPI Keyword Daily: Daily keyword-level performance metrics with KPI mapping
 -- Currently Google Ads only (keywords are specific to search campaigns)
 
+-- depends_on: {{ ref('accounts') }}
+-- depends_on: {{ ref('keywords') }}
+-- depends_on: {{ ref('adsets') }}
+-- depends_on: {{ ref('campaigns') }}
+
 {% set google_keyword_stats = adapter.get_relation(
       database=var("bq_project_id"),
       schema=var("source_google_dataset"),
