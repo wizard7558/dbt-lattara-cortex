@@ -8,7 +8,7 @@
       "granularity": "day"
     },
     database=var("bq_project_id"),
-    schema=var("bq_dataset_id"),
+    schema=var("target_dataset"),
   )
 }}
 
@@ -202,7 +202,7 @@ facebook_performance AS (
   LEFT JOIN facebook_conversions fc
     ON fb.date = fc.date
     AND fb.ad_id = fc.ad_id
-  LEFT JOIN `{{ var("bq_project_id") }}.{{ var("bq_dataset_id") }}.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
 
     ON fb.account_id = a.id
   GROUP BY fb.date, fb.earliest_date, fb.latest_date, fb.ad_id, fb.adset_id, fb.campaign_id, fb.account_id
@@ -354,7 +354,7 @@ google_performance AS (
   LEFT JOIN google_conversions gc
     ON gb.date = gc.date
     AND gb.ad_id = gc.ad_id
-  LEFT JOIN `{{ var("bq_project_id") }}.{{ var("bq_dataset_id") }}.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
     ON gb.account_id = a.id
   GROUP BY gb.date, gb.earliest_date, gb.latest_date, gb.ad_id, gb.adset_id, gb.campaign_id, gb.account_id
 ),
@@ -715,7 +715,7 @@ linkedin_performance AS (
   LEFT JOIN linkedin_conversions lc
     ON lb.date = lc.date
     AND lb.ad_id = lc.ad_id
-  LEFT JOIN `{{ var("bq_project_id") }}.{{ var("bq_dataset_id") }}.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
     ON lb.account_id = a.id
 
   GROUP BY lb.date, lb.earliest_date, lb.latest_date, lb.ad_id, lb.adset_id, lb.campaign_id, lb.account_id
@@ -943,7 +943,7 @@ tiktok_performance AS (
   LEFT JOIN tiktok_conversions tc
     ON tb.date = tc.date
     AND tb.ad_id = tc.ad_id
-  LEFT JOIN `{{ var("bq_project_id") }}.{{ var("bq_dataset_id") }}.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
     ON tb.account_id = a.id
   GROUP BY tb.date, tb.earliest_date, tb.latest_date, tb.ad_id, tb.adset_id, tb.campaign_id, tb.account_id
 ),
@@ -1106,7 +1106,7 @@ bing_performance AS (
   LEFT JOIN bing_conversions bc
     ON bb.date = bc.date
     AND bb.ad_id = bc.ad_id  -- Join at AD level (same as Google)
-  LEFT JOIN `{{ var("bq_project_id") }}.{{ var("bq_dataset_id") }}.accounts` a
+  LEFT JOIN {{ ref('accounts') }} a
     ON bb.account_id = a.id
   GROUP BY bb.date, bb.earliest_date, bb.latest_date, bb.ad_id, bb.adset_id, bb.campaign_id, bb.account_id
 ),

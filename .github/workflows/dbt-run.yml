@@ -68,7 +68,15 @@ jobs:
 
       - name: Run dbt
         run: |
-          VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "${{ inputs.bq_dataset_id }}", "organization_id": "${{ inputs.organization_id }}"}'
+          # Build vars JSON — derive per-org source dataset names from bq_dataset_id
+          BQ_DS="${{ inputs.bq_dataset_id }}"
+          if [ "$BQ_DS" != "cortex" ] && [ -n "$BQ_DS" ]; then
+            # Per-org run: Fivetran datasets follow {org_prefix}_{platform} naming
+            VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "'"$BQ_DS"'", "organization_id": "${{ inputs.organization_id }}", "source_facebook_dataset": "'"${BQ_DS}_facebook_ads"'", "source_google_dataset": "'"${BQ_DS}_google_ads"'", "source_linkedin_dataset": "'"${BQ_DS}_linkedin_ads"'", "source_tiktok_dataset": "'"${BQ_DS}_tiktok_ads"'", "source_bingads_dataset": "'"${BQ_DS}_bing_ads"'"}'
+          else
+            # Default/legacy run: use dbt_project.yml defaults
+            VARS='{"target_dataset": "${{ inputs.target_dataset }}", "bq_dataset_id": "'"$BQ_DS"'", "organization_id": "${{ inputs.organization_id }}"}'
+          fi
 
           CMD="dbt run --vars '${VARS}'"
 
