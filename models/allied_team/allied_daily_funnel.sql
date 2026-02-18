@@ -54,12 +54,31 @@ jamloop as (
     from {{ ref('stg_allied_jamloop') }}
 ),
 
+clearline as (
+    select
+        date,
+        platform_source,
+        media_channel,
+        partner_platform,
+        plan_section,
+        creative,
+        publisher,
+        impressions,
+        clicks,
+        spend,
+        completions,
+        reach
+    from {{ ref('stg_allied_clearline') }}
+),
+
 unioned as (
     select * from google_ads
     union all
     select * from magnite
     union all
     select * from jamloop
+    union all
+    select * from clearline
 ),
 
 daily_aggregated as (
