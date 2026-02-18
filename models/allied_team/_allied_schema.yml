@@ -12,7 +12,8 @@ models:
         description: Google Ads campaign ID
         tests:
           - accepted_values:
-              values: ['23202415135', '23198130224', '23211264475']
+              arguments:
+                  values: ['23202415135', '23198130224', '23211264475']
       - name: media_channel
         description: Mapped media channel (Youtube Nonskip, SHORTS, or Skippable)
       - name: plan_section

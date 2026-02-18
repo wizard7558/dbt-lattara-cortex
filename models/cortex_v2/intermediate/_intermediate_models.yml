@@ -21,7 +21,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
 
   - name: int_ad_groups_unified
     description: "Unified ad group data from all ad platforms"
@@ -42,7 +43,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
 
   - name: int_ads_unified
     description: "Unified ad data from all ad platforms"
@@ -66,7 +68,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
 
   # ===========================================================================
   # Fivetran Unified Models
@@ -91,7 +94,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']
       - name: impressions
         description: "Total impressions"
       - name: clicks
@@ -129,4 +133,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads', 'tiktok_ads']

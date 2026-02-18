@@ -21,10 +21,11 @@ sources:
       - name: ad_set_history
       - name: ad_history
       - name: ads_insights
-        loaded_at_field: date
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: date
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
       - name: ads_insights_actions
       - name: ads_insights_conversions
       - name: ads_insights_action_values
@@ -51,17 +52,19 @@ sources:
       - name: ad_group_history
       - name: ad_group_criterion_history
       - name: keyword_stats
-        loaded_at_field: date
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: date
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
       - name: keyword_conversions
       - name: ads_conversions
       - name: campaign_stats
-        loaded_at_field: date
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: date
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
       - name: campaign_conversions
 
   # Google Ads dbt package (Fivetran) - uses google_ads suffix
@@ -81,10 +84,11 @@ sources:
       - name: campaign_group_history
       - name: monthly_ad_analytics_by_member_country
       - name: ad_analytics_by_campaign
-        loaded_at_field: day
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: day
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
 
   # TikTok Ads sources - schema from var('source_tiktok_dataset')
   - name: tiktok_ads
@@ -94,10 +98,11 @@ sources:
       - name: advertiser
       - name: campaign_history
       - name: campaign_report_daily
-        loaded_at_field: date
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: date
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
       - name: campaign_country_report
 
   # Bing/Microsoft Ads sources - schema from var('source_bingads_dataset')
@@ -110,10 +115,11 @@ sources:
       - name: ad_group_history
       - name: ad_history
       - name: ad_performance_daily_report
-        loaded_at_field: date
-        freshness:
-          warn_after: {count: 48, period: hour}
-          error_after: {count: 72, period: hour}
+        config:
+          loaded_at_field: date
+          freshness:
+            warn_after: {count: 48, period: hour}
+            error_after: {count: 72, period: hour}
       - name: destination_url_performance_daily_report
 
   - name: bingads_microsoft_ads

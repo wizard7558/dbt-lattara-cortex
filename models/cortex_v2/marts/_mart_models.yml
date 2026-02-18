@@ -67,7 +67,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
       - name: campaign_id
         description: "Campaign identifier"
         tests:
@@ -80,28 +81,33 @@ models:
         description: "Number of ad impressions"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: clicks
         description: "Number of ad clicks"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: spend
         description: "Amount spent in account currency"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: ctr
         description: "Click-through rate (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: roas
         description: "Return on ad spend (ratio)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
 
   - name: ad_group_performance
     description: |
@@ -115,7 +121,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
       - name: campaign_id
         tests:
           - not_null
@@ -128,11 +135,13 @@ models:
       - name: impressions
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: spend
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
 
   - name: ad_performance
     description: |
@@ -146,7 +155,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
       - name: campaign_id
         tests:
           - not_null
@@ -162,11 +172,13 @@ models:
       - name: impressions
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: spend
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
 
   - name: creative_fatigue
     description: |
@@ -196,7 +208,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
       - name: date
         description: "Metrics date (partition key)"
         tests:
@@ -205,47 +218,55 @@ models:
         description: "Daily impressions (minimum 100 for inclusion)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 100
+              arguments:
+                  min_value: 100
       - name: clicks
         description: "Daily clicks"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: spend
         description: "Daily spend in account currency"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: ctr
         description: "Daily click-through rate (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: ctr_7day_avg
         description: "7-day rolling average CTR (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: baseline_ctr
         description: "Baseline CTR from first 7-day window (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: ctr_change_pct
         description: "Change from baseline as decimal (-0.5 = 50% decline)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: -1
-              max_value: 10
+              arguments:
+                  min_value: -1
+                  max_value: 10
       - name: fatigue_status
         description: "Fatigue status: FATIGUED, WARNING, or HEALTHY"
         tests:
           - not_null
           - accepted_values:
-              values: ['FATIGUED', 'WARNING', 'HEALTHY']
+              arguments:
+                  values: ['FATIGUED', 'WARNING', 'HEALTHY']
 
   - name: creative_performance
     description: |
@@ -275,38 +296,45 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['google_ads', 'meta_ads', 'linkedin_ads']
+              arguments:
+                  values: ['google_ads', 'meta_ads', 'linkedin_ads']
       - name: total_impressions
         description: "Lifetime total impressions"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: total_clicks
         description: "Lifetime total clicks"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: total_spend
         description: "Lifetime total spend in account currency"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: total_conversions
         description: "Lifetime total conversions"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: ctr
         description: "Lifetime click-through rate (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: roas
         description: "Lifetime return on ad spend (ratio)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: first_seen_date
         description: "First date the ad had metrics (partition key)"
         tests:
@@ -320,7 +348,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['FATIGUED', 'WARNING', 'HEALTHY', 'UNKNOWN']
+              arguments:
+                  values: ['FATIGUED', 'WARNING', 'HEALTHY', 'UNKNOWN']
 
   - name: audience_performance
     description: |
@@ -344,7 +373,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['GOOGLE_ADS', 'META_ADS', 'LINKEDIN_ADS']
+              arguments:
+                  values: ['GOOGLE_ADS', 'META_ADS', 'LINKEDIN_ADS']
       - name: campaign_id
         description: "Campaign identifier"
         tests:
@@ -354,7 +384,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['age', 'gender', 'location', 'device', 'company_size', 'seniority', 'industry']
+              arguments:
+                  values: ['age', 'gender', 'location', 'device', 'company_size', 'seniority', 'industry']
       - name: demographic_value
         description: "Demographic segment value (e.g., '18-24', 'male', 'United States')"
         tests:
@@ -367,48 +398,57 @@ models:
         description: "Number of ad impressions"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: clicks
         description: "Number of ad clicks"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: spend
         description: "Amount spent in account currency"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: conversions
         description: "Number of conversions"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: conversion_value
         description: "Total conversion value"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: ctr
         description: "Click-through rate (percentage)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                  min_value: 0
+                  max_value: 100
       - name: cpc
         description: "Cost per click"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: cpa
         description: "Cost per acquisition"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: roas
         description: "Return on ad spend (ratio)"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
 
   - name: mart_conversion_events
     description: |
@@ -440,7 +480,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['META_ADS', 'GOOGLE_ADS', 'LINKEDIN_ADS', 'TIKTOK_ADS']
+              arguments:
+                  values: ['META_ADS', 'GOOGLE_ADS', 'LINKEDIN_ADS', 'TIKTOK_ADS']
       - name: date
         description: "Date of the conversion events (partitioning key)"
         tests:
@@ -454,19 +495,23 @@ models:
         tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: event_value
         description: "Total value of conversion events"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: ad_count
         description: "Number of distinct ads with this conversion"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0
       - name: avg_value_per_event
         description: "Average value per conversion event"
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                  min_value: 0

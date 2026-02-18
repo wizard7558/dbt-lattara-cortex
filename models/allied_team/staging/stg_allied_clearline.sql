@@ -9,6 +9,16 @@
   - Spend calculated using target CPM: $29.78 * (impressions / 1000)
 */
 
+{% set raw_col_names = [] %}
+{% for c in adapter.get_columns_in_relation(source('allied_team', 'raw_clearline_metrics')) %}
+  {% do raw_col_names.append(c.name | lower) %}
+{% endfor %}
+
+{% set rf_col_names = [] %}
+{% for c in adapter.get_columns_in_relation(source('allied_team', 'clearline_reach_frequency')) %}
+  {% do rf_col_names.append(c.name | lower) %}
+{% endfor %}
+
 with source as (
     -- 2026+ data: synced from two ClearLine APIs, includes join observability fields
     select
@@ -27,15 +37,47 @@ with source as (
         cookie_reach,
         ip_reach,
         device_reach,
+        {% if 'demand_tag_id' in raw_col_names %}
         demand_tag_id,
+        {% else %}
+        cast(null as int64) as demand_tag_id,
+        {% endif %}
+        {% if 'clearline_campaign_id' in raw_col_names %}
         clearline_campaign_id,
+        {% else %}
+        cast(null as int64) as clearline_campaign_id,
+        {% endif %}
         demand_tag_label,
+        {% if 'clearline_connection_id' in raw_col_names %}
         clearline_connection_id,
+        {% else %}
+        cast(null as string) as clearline_connection_id,
+        {% endif %}
+        {% if 'rf_snapshot_ingested_at' in raw_col_names %}
         rf_snapshot_ingested_at,
+        {% else %}
+        cast(null as timestamp) as rf_snapshot_ingested_at,
+        {% endif %}
+        {% if 'rf_window_start_date' in raw_col_names %}
         rf_window_start_date,
+        {% else %}
+        cast(null as date) as rf_window_start_date,
+        {% endif %}
+        {% if 'rf_window_end_date' in raw_col_names %}
         rf_window_end_date,
+        {% else %}
+        cast(null as date) as rf_window_end_date,
+        {% endif %}
+        {% if 'rf_matched' in raw_col_names %}
         rf_matched,
+        {% else %}
+        cast(null as bool) as rf_matched,
+        {% endif %}
+        {% if 'join_status' in raw_col_names %}
         join_status,
+        {% else %}
+        cast(null as string) as join_status,
+        {% endif %}
         publisher,
         duplicate_impressions,
         expired_impressions,
@@ -91,7 +133,11 @@ with source as (
 
 rf_latest as (
     select
+        {% if 'clearline_connection_id' in rf_col_names %}
         clearline_connection_id,
+        {% else %}
+        cast(null as string) as clearline_connection_id,
+        {% endif %}
         demand_tag_id,
         demand_tag_label,
         unique_ips,
@@ -146,7 +192,7 @@ creative_totals as (
 mapped as (
     select
         -- Date
-        s.date,
+        e.date,
 
         -- Platform identification
         'ClearLine' as platform_source,
