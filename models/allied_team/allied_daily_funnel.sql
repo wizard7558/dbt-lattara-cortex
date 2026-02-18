@@ -74,7 +74,11 @@ daily_aggregated as (
         -- Daily metrics
         sum(impressions) as impressions,
         sum(completions) as completions,
-        sum(reach) as reach,
+        case
+            -- ClearLine reach is a line-item unique audience repeated across rows.
+            when platform_source = 'ClearLine' then max(reach)
+            else sum(reach)
+        end as reach,
         sum(spend) as gross_spend,
         sum(clicks) as clicks
         

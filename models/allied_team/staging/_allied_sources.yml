@@ -76,10 +76,16 @@ sources:
         columns:
           - name: date
             description: Report date
+          - name: clearline_connection_id
+            description: Supabase ad_platform_connections.id for deterministic multi-account joins
           - name: campaign
             description: Campaign name
+          - name: clearline_campaign_id
+            description: Numeric campaign_id from ClearLine metrics API
           - name: creative
             description: Demand tag / line item name
+          - name: demand_tag_id
+            description: Demand tag ID used for explicit join to clearline_reach_frequency
           - name: impressions
             description: Number of ad impressions
           - name: spend
@@ -96,11 +102,23 @@ sources:
             description: Device-based reach from R&F API
           - name: demand_tag_label
             description: Targeting strategy from R&F API
+          - name: rf_snapshot_ingested_at
+            description: R&F snapshot timestamp used when enriching the raw row
+          - name: rf_window_start_date
+            description: Date window start used for the R&F fetch during sync
+          - name: rf_window_end_date
+            description: Date window end used for the R&F fetch during sync
+          - name: rf_matched
+            description: True if row matched direct R&F data by demand_tag_id
+          - name: join_status
+            description: Reach join outcome (direct_match, cadence_fallback, rf_unmatched, missing_demand_tag)
 
       - name: clearline_reach_frequency
         description: ClearLine R&F data from dedicated api/v0/reports endpoint
         freshness: null
         columns:
+          - name: clearline_connection_id
+            description: Supabase ad_platform_connections.id for deterministic multi-account joins
           - name: demand_tag_id
             description: ClearLine demand tag ID
           - name: demand_tag_label

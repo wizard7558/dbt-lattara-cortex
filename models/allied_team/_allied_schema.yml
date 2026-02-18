@@ -56,10 +56,15 @@ models:
     description: >
       Staged ClearLine CTV data for Allied Team campaigns.
       Data ingested via sync-clearline Edge Function from ClearLine API.
-      Uses IP-based reach from R&F API (most reliable for CTV devices).
+      Uses explicit join to clearline_reach_frequency by demand_tag_id (+ connection id)
+      and prefers R&F unique IP reach (most reliable for CTV devices).
     columns:
       - name: date
         description: Report date
+      - name: clearline_connection_id
+        description: Supabase ad_platform_connections.id used to scope R&F joins
+      - name: demand_tag_id
+        description: Deterministic join key to clearline_reach_frequency
       - name: platform_source
         description: Always "ClearLine"
       - name: partner_platform
@@ -76,6 +81,12 @@ models:
         description: Cookie-based reach from R&F API
       - name: device_reach
         description: Device-based reach from R&F API
+      - name: rf_matched
+        description: True when row matched direct R&F data by demand_tag_id
+      - name: join_status
+        description: Reach join outcome for observability/fallback diagnostics
+      - name: rf_snapshot_ingested_at
+        description: Effective R&F snapshot timestamp used for the row
 
   - name: allied_unified_funnel
     description: >
