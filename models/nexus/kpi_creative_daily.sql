@@ -60,14 +60,56 @@ facebook_dates AS (
       schema=var("source_facebook_dataset"),
       identifier="ads_insights_actions"
 ) %}
-facebook_conversion_names AS (
+{% set facebook_ads_insights_conversions = adapter.get_relation(
+      database=var("bq_project_id"),
+      schema=var("source_facebook_dataset"),
+      identifier="ads_insights_conversions"
+) %}
+facebook_conversion_events AS (
   {% if facebook_ads_insights_actions is not none %}
   SELECT
     CAST(date AS DATE) AS date,
-    CONCAT('facebook_ads_', CAST(ad_id AS STRING)) AS ad_id,
-    action_type AS conversion_name,
-    SUM(CAST(value AS FLOAT64)) AS conversion_count
+    CAST(ad_id AS STRING) AS ad_id,
+    action_type,
+    SAFE_CAST(value AS FLOAT64) AS value
   FROM {{ facebook_ads_insights_actions }}
+  {% else %}
+  SELECT
+    CAST(NULL AS DATE) as date,
+    CAST(NULL AS STRING) as ad_id,
+    CAST(NULL AS STRING) as action_type,
+    CAST(NULL AS FLOAT64) as value
+  FROM (SELECT 1) WHERE FALSE
+  {% endif %}
+
+  UNION ALL
+
+  {% if facebook_ads_insights_conversions is not none %}
+  SELECT
+    CAST(date AS DATE) AS date,
+    CAST(ad_id AS STRING) AS ad_id,
+    action_type,
+    SAFE_CAST(value AS FLOAT64) AS value
+  FROM {{ facebook_ads_insights_conversions }}
+  {% else %}
+  SELECT
+    CAST(NULL AS DATE) as date,
+    CAST(NULL AS STRING) as ad_id,
+    CAST(NULL AS STRING) as action_type,
+    CAST(NULL AS FLOAT64) as value
+  FROM (SELECT 1) WHERE FALSE
+  {% endif %}
+),
+facebook_conversion_names AS (
+  {% if facebook_ads_insights_actions is not none or facebook_ads_insights_conversions is not none %}
+  SELECT
+    date AS date,
+    CONCAT('facebook_ads_', ad_id) AS ad_id,
+    action_type AS conversion_name,
+    SUM(COALESCE(value, 0)) AS conversion_count
+  FROM facebook_conversion_events
+  WHERE action_type IS NOT NULL
+    AND TRIM(action_type) != ''
   GROUP BY date, ad_id, action_type
   {% else %}
   SELECT
@@ -623,7 +665,13 @@ linkedin_base AS (
     CONCAT('linkedin_ads_', CAST(cmh.account_id AS STRING)) AS account_id,
     COALESCE(CAST(la.cost_in_usd AS FLOAT64), 0) AS spend,
     COALESCE(la.impressions, 0) AS impressions,
-    COALESCE(la.clicks, 0) AS clicks
+    COALESCE(la.clicks, 0) AS clicks,
+    -- Inline conversion columns
+    COALESCE(la.one_click_leads, 0) AS one_click_leads,
+    COALESCE(la.lead_generation_mail_contact_info_shares, 0) AS lead_generation_mail_contact_info_shares,
+    COALESCE(la.landing_page_clicks, 0) AS landing_page_clicks,
+    COALESCE(la.external_website_conversions, 0) AS inline_external_website_conversions,
+    COALESCE(CAST(la.conversion_value_in_local_currency AS FLOAT64), 0) AS inline_conversion_value
   FROM {{ linkedin_ad_analytics_by_creative }} la
   CROSS JOIN inputs
   INNER JOIN linkedin_dates ld
@@ -662,7 +710,12 @@ linkedin_base AS (
     CAST(NULL AS STRING) as account_id,
     CAST(NULL AS FLOAT64) as spend,
     CAST(NULL AS INTEGER) as impressions,
-    CAST(NULL AS INTEGER) as clicks
+    CAST(NULL AS INTEGER) as clicks,
+    CAST(NULL AS INTEGER) as one_click_leads,
+    CAST(NULL AS INTEGER) as lead_generation_mail_contact_info_shares,
+    CAST(NULL AS INTEGER) as landing_page_clicks,
+    CAST(NULL AS INTEGER) as inline_external_website_conversions,
+    CAST(NULL AS FLOAT64) as inline_conversion_value
   FROM (SELECT 1) WHERE FALSE
   {% endif %}
 ),
@@ -680,36 +733,24 @@ linkedin_performance AS (
     MAX(lb.impressions) as impressions,
     MAX(lb.clicks) as clicks,
 
-    MAX(a.kpi_1) AS kpi_1_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_count ELSE 0 END) AS kpi_1_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_1 THEN lc.conversion_value ELSE 0 END) AS kpi_1_value,
-    MAX(a.kpi_2) AS kpi_2_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_count ELSE 0 END) AS kpi_2_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_2 THEN lc.conversion_value ELSE 0 END) AS kpi_2_value,
-    MAX(a.kpi_3) AS kpi_3_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_count ELSE 0 END) AS kpi_3_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_3 THEN lc.conversion_value ELSE 0 END) AS kpi_3_value,
-    MAX(a.kpi_4) AS kpi_4_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_count ELSE 0 END) AS kpi_4_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_4 THEN lc.conversion_value ELSE 0 END) AS kpi_4_value,
-    MAX(a.kpi_5) AS kpi_5_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_count ELSE 0 END) AS kpi_5_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_5 THEN lc.conversion_value ELSE 0 END) AS kpi_5_value,
-    MAX(a.kpi_6) AS kpi_6_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_count ELSE 0 END) AS kpi_6_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_6 THEN lc.conversion_value ELSE 0 END) AS kpi_6_value,
-    MAX(a.kpi_7) AS kpi_7_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_count ELSE 0 END) AS kpi_7_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_7 THEN lc.conversion_value ELSE 0 END) AS kpi_7_value,
-    MAX(a.kpi_8) AS kpi_8_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_count ELSE 0 END) AS kpi_8_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_8 THEN lc.conversion_value ELSE 0 END) AS kpi_8_value,
-    MAX(a.kpi_9) AS kpi_9_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_count ELSE 0 END) AS kpi_9_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_9 THEN lc.conversion_value ELSE 0 END) AS kpi_9_value,
-    MAX(a.kpi_10) AS kpi_10_name,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_count ELSE 0 END) AS kpi_10_count,
-    SUM(CASE WHEN lc.conversion_name = a.kpi_10 THEN lc.conversion_value ELSE 0 END) AS kpi_10_value
+    -- For each KPI slot: check named conversions first, then fall back to inline columns
+    -- Inline columns: one_click_leads, lead_generation_mail_contact_info_shares, landing_page_clicks, external_website_conversions
+    {% set inline_cols = ['one_click_leads', 'lead_generation_mail_contact_info_shares', 'landing_page_clicks', 'external_website_conversions'] %}
+    {% for i in range(1, 11) %}
+    MAX(a.kpi_{{ i }}) AS kpi_{{ i }}_name,
+    SUM(CASE WHEN lc.conversion_name = a.kpi_{{ i }} THEN lc.conversion_count ELSE 0 END)
+      + MAX(CASE
+        {% for col in inline_cols %}
+        WHEN a.kpi_{{ i }} = '{{ col }}' THEN lb.{% if col == 'external_website_conversions' %}inline_external_website_conversions{% else %}{{ col }}{% endif %}
+        {% endfor %}
+        ELSE 0
+      END) AS kpi_{{ i }}_count,
+    SUM(CASE WHEN lc.conversion_name = a.kpi_{{ i }} THEN lc.conversion_value ELSE 0 END)
+      + MAX(CASE
+        WHEN a.kpi_{{ i }} = 'external_website_conversions' THEN lb.inline_conversion_value
+        ELSE 0
+      END) AS kpi_{{ i }}_value{{ ',' if i < 10 else '' }}
+    {% endfor %}
 
   FROM linkedin_base lb
   LEFT JOIN linkedin_conversions lc
