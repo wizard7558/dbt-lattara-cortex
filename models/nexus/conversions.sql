@@ -133,36 +133,47 @@ linkedin_conv as (
      ) %}
      {% if linkedin_creative_history_conv is not none and linkedin_campaign_history_conv is not none %}
      SELECT
-          ad_network_id,
-          account_id,
+          "linkedin_ads" as ad_network_id,
+          CONCAT("linkedin_ads_", CAST(account_id AS STRING)) as account_id,
           conversion_name,
           SUM(conversion_count) as count
      FROM (
-          SELECT
-               "linkedin_ads" as ad_network_id,
-               CONCAT("linkedin_ads_", CAST(cmh.account_id AS STRING)) as account_id,
-               conversion_name,
-               conversion_count
+          SELECT account_id, 'one_click_leads' as conversion_name,
+               SUM(COALESCE(la.one_click_leads, 0)) as conversion_count
           FROM {{ linkedin_ad_analytics_by_creative }} la
-          INNER JOIN (
-               SELECT id, campaign_id,
-                    ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn
-               FROM {{ linkedin_creative_history_conv }}
-          ) crh ON la.creative_id = crh.id AND crh.rn = 1
-          INNER JOIN (
-               SELECT id, account_id,
-                    ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn
-               FROM {{ linkedin_campaign_history_conv }}
-          ) cmh ON crh.campaign_id = cmh.id AND cmh.rn = 1
-          UNPIVOT (conversion_count FOR conversion_name IN (
-               one_click_leads,
-               lead_generation_mail_contact_info_shares,
-               landing_page_clicks,
-               external_website_conversions
-          ))
+          INNER JOIN (SELECT id, campaign_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn FROM {{ linkedin_creative_history_conv }}) crh ON la.creative_id = crh.id AND crh.rn = 1
+          INNER JOIN (SELECT id, account_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn FROM {{ linkedin_campaign_history_conv }}) cmh ON crh.campaign_id = cmh.id AND cmh.rn = 1
+          GROUP BY account_id
+
+          UNION ALL
+
+          SELECT account_id, 'lead_generation_mail_contact_info_shares' as conversion_name,
+               SUM(COALESCE(la.lead_generation_mail_contact_info_shares, 0)) as conversion_count
+          FROM {{ linkedin_ad_analytics_by_creative }} la
+          INNER JOIN (SELECT id, campaign_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn FROM {{ linkedin_creative_history_conv }}) crh ON la.creative_id = crh.id AND crh.rn = 1
+          INNER JOIN (SELECT id, account_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn FROM {{ linkedin_campaign_history_conv }}) cmh ON crh.campaign_id = cmh.id AND cmh.rn = 1
+          GROUP BY account_id
+
+          UNION ALL
+
+          SELECT account_id, 'landing_page_clicks' as conversion_name,
+               SUM(COALESCE(la.landing_page_clicks, 0)) as conversion_count
+          FROM {{ linkedin_ad_analytics_by_creative }} la
+          INNER JOIN (SELECT id, campaign_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn FROM {{ linkedin_creative_history_conv }}) crh ON la.creative_id = crh.id AND crh.rn = 1
+          INNER JOIN (SELECT id, account_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn FROM {{ linkedin_campaign_history_conv }}) cmh ON crh.campaign_id = cmh.id AND cmh.rn = 1
+          GROUP BY account_id
+
+          UNION ALL
+
+          SELECT account_id, 'external_website_conversions' as conversion_name,
+               SUM(COALESCE(la.external_website_conversions, 0)) as conversion_count
+          FROM {{ linkedin_ad_analytics_by_creative }} la
+          INNER JOIN (SELECT id, campaign_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_at DESC) AS rn FROM {{ linkedin_creative_history_conv }}) crh ON la.creative_id = crh.id AND crh.rn = 1
+          INNER JOIN (SELECT id, account_id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY last_modified_time DESC) AS rn FROM {{ linkedin_campaign_history_conv }}) cmh ON crh.campaign_id = cmh.id AND cmh.rn = 1
+          GROUP BY account_id
      )
      WHERE conversion_count > 0
-     GROUP BY ad_network_id, account_id, conversion_name
+     GROUP BY 1, 2, 3
      {% endif %}
      {% endif %}
 
