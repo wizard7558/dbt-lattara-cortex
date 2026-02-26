@@ -131,6 +131,49 @@ with source as (
     from {{ source('allied_team', 'raw_clearline_metrics_2025') }}
 ),
 
+-- ClearLine can emit aggregate rollup rows (publisher null) alongside
+-- publisher-level rows for the same key. Keep null-publisher rows only when
+-- they are not near-duplicates of the summed publisher-level metrics.
+publisher_rollup_keys as (
+    select
+        date,
+        campaign,
+        coalesce(creative, '') as creative_key,
+        device_platform,
+        device_os,
+        country
+    from source
+    group by 1, 2, 3, 4, 5, 6
+    having
+        countif(publisher is null) > 0
+        and countif(publisher is not null) > 0
+        and sum(if(publisher is not null, impressions, 0)) > 0
+        and safe_divide(
+            sum(if(publisher is null, impressions, 0)),
+            sum(if(publisher is not null, impressions, 0))
+        ) between 0.98 and 1.02
+        and (
+            sum(if(publisher is not null, completions, 0)) = 0
+            or safe_divide(
+                sum(if(publisher is null, completions, 0)),
+                sum(if(publisher is not null, completions, 0))
+            ) between 0.98 and 1.02
+        )
+),
+
+source_cleaned as (
+    select s.*
+    from source s
+    left join publisher_rollup_keys k
+        on s.date = k.date
+        and s.campaign = k.campaign
+        and coalesce(s.creative, '') = k.creative_key
+        and s.device_platform = k.device_platform
+        and s.device_os = k.device_os
+        and s.country = k.country
+    where not (s.publisher is null and k.date is not null)
+),
+
 rf_latest as (
     select
         {% if 'clearline_connection_id' in rf_col_names %}
@@ -161,7 +204,7 @@ enriched as (
         rf.unique_devices as rf_unique_devices,
         rf.ingested_at as rf_row_ingested_at,
         rf.demand_tag_id is not null as rf_joined
-    from source s
+    from source_cleaned s
     left join rf_latest rf
         on s.demand_tag_id = rf.demand_tag_id
         and coalesce(s.clearline_connection_id, '') = coalesce(rf.clearline_connection_id, '')
