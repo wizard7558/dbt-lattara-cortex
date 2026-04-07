@@ -21,7 +21,6 @@ clean-targets:
 
 # Multi-tenant variables for self-serve deployment
 # Override via --vars flag: dbt run --vars '{"target_dataset": "com_client_cortex", ...}'
-# Default values match the legacy shared dataset names for backwards compatibility
 vars:
   # Target dataset for dbt output (client's cortex dataset)
   target_dataset: "cortex"
@@ -31,16 +30,29 @@ vars:
   bq_project_id: "res-analytics"
   bq_dataset_id: "cortex"  # Will be overridden per-client, e.g., "com_acme"
 
-  # Source datasets for each platform (client's raw data datasets)
-  # Note: These are kept for backwards compatibility but the nexus pattern
-  # uses bq_dataset_id to construct schema names dynamically
-  source_facebook_dataset: "facebook_ads_v2"
-  source_google_dataset: "google_ads_v2"
-  source_linkedin_dataset: "linkedin_ads"
-  source_tiktok_dataset: "tiktok_ads"
-  source_bingads_dataset: "bingads"
-  source_hubspot_dataset: "hubspot"
-  source_salesforce_dataset: "salesforce"
+  # Source datasets for each platform (per-client raw data)
+  #
+  # IMPORTANT: These defaults are intentionally unresolvable stubs.
+  # Every nexus model uses adapter.get_relation() on these vars and, when
+  # the relation resolves to None, skips that network via an empty fallback.
+  #
+  # Historically these defaulted to real multi-tenant datasets
+  # (facebook_ads_v2, google_ads_v2, linkedin_ads, tiktok_ads, bingads),
+  # which caused catastrophic cross-tenant data contamination: any client
+  # whose workflow dispatch omitted a source_*_dataset override would
+  # silently read from the shared default and relabel every other tenant's
+  # accounts/spend with the current client's organization_id.
+  #
+  # Every client MUST now provide explicit source_*_dataset overrides for
+  # each network it uses. Missing overrides = no data for that network,
+  # which is the safe default.
+  source_facebook_dataset: "__unconfigured_facebook__"
+  source_google_dataset: "__unconfigured_google__"
+  source_linkedin_dataset: "__unconfigured_linkedin__"
+  source_tiktok_dataset: "__unconfigured_tiktok__"
+  source_bingads_dataset: "__unconfigured_bingads__"
+  source_hubspot_dataset: "__unconfigured_hubspot__"
+  source_salesforce_dataset: "__unconfigured_salesforce__"
 
   # Organization ID for client-specific logic
   organization_id: ""
