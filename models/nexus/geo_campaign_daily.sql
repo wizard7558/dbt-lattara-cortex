@@ -1,3 +1,4 @@
+-- depends_on: {{ ref('google_geo_targets') }}
 
 
 -- Unified campaign-level geographic performance across all ad networks
