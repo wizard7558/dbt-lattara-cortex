@@ -63,6 +63,9 @@ jobs:
       - name: Install dbt
         run: pip install dbt-bigquery==1.11.0
 
+      - name: Install dbt packages
+        run: dbt deps
+
       - name: Configure GCP credentials
         run: echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > /tmp/gcp-key.json
 
